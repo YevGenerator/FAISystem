@@ -1,0 +1,15 @@
+cmake_minimum_required(VERSION 4.0)
+project(SmallTest)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+add_subdirectory(core/Core)
+add_subdirectory(core/Core/Test)
+add_subdirectory(core/strings)
+add_subdirectory(core/build_compiler)
+add_subdirectory(core/lsp_server)
+add_subdirectory(core/ZMCore)
+add_subdirectory(core/visualizer)
+add_subdirectory(servant)
+add_subdirectory(server)

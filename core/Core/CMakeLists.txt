@@ -1,0 +1,40 @@
+add_library(RP_Core INTERFACE
+        Timer.hpp
+        sensor/Sensor.hpp
+        nodes/NodeTable.hpp
+        nodes/NodeMessage.hpp
+        nodes/NodeId.hpp
+        nodes/NodeAddress.hpp
+        nodes/Node.hpp
+        types/NetField.hpp
+        logger/LogRecordList.hpp
+        logger/LogRecordTypes.hpp
+        logger/Logger.hpp
+        DeviceConfig.hpp
+        nodes/DataSlot.hpp
+        commands/CommandList.hpp
+        commands/CmdTypes.hpp
+        algos/algoholic.hpp
+        algos/base_algo.hpp
+        random/gaussian_noise.hpp
+        types/basic.hpp
+        algos/AlgoResult.hpp
+        sensor/PinDriver.hpp
+        sensor/SensorFilter.hpp
+        events/EventId.hpp
+        events/EventHeader.hpp
+        events/EventCounter.hpp
+        queue/concepts/is_queue_push.hpp
+        queue/concepts/is_queue_pull.hpp
+        queue/concepts/is_queue_push.hpp
+        sensor/SensorStore.hpp
+        nodes/RouteTable.hpp
+        nodes/Router.hpp
+        commands/NetworkPacket.hpp
+        nodes/NodeInfo.hpp
+        nodes/Worker.hpp
+)
+
+target_include_directories(RP_Core INTERFACE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+)
