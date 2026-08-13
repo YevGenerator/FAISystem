@@ -29,7 +29,7 @@ namespace NodeSystem::ZMCore {
             }
         }
 
-    private:
+    public:
         CoreRouter coreRouter;
         zmq::context_t &context;
     };

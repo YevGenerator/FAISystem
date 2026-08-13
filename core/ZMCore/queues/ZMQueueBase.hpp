@@ -24,9 +24,14 @@ namespace NodeSystem::ZMCore::Queues {
             ConnectPolicy::init(socket, context, std::forward<Args>(args)...);
         }
 
-        template<typename... Args>
-        auto push(Args &&... args) requires Policies::IsPushProtocolPolicy<Protocol> {
-            return Protocol::push(this->socket, std::forward<Args>(args)...);
+        template<typename T>
+        auto push(const Core::ID deviceId, T &&arg) requires Policies::IsPushTCPServerProtocolPolicy<Protocol> {
+            return Protocol::push(this->socket, std::forward<T>(arg), deviceId);
+        }
+
+        template<typename T>
+        auto push(T &&arg) requires Policies::IsPushProtocolPolicy<Protocol> {
+            return Protocol::push(this->socket, std::forward<T>(arg));
         }
 
 

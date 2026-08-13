@@ -11,10 +11,10 @@ namespace NodeSystem::ZMCore {
     template<IsRunnable TTask>
     class ThreadRunner {
     private:
-        TTask task;
         std::jthread thread;
 
     public:
+        TTask task;
         template<typename... Args>
         explicit ThreadRunner(Args &&... args)
             : task(std::forward<Args>(args)...) {

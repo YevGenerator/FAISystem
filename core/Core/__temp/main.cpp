@@ -67,6 +67,8 @@ struct Row {
     double mx;
 };
 
+
+
 int main() {
     std::vector<Row> table;
     table.reserve(100);

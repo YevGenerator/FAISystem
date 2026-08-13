@@ -15,6 +15,12 @@ add_library(ZMCore INTERFACE
         IpCharAddress.hpp
         IpCharAddress.hpp
         ZMBus.hpp
+        ZMSensors.hpp
+        CmdProcessor.hpp
+        delegate.hpp
+        CmdProcessorContext.hpp
+        CmdProcessorContext.hpp
+        ZMBusContext.hpp
 )
 
 find_package(cppzmq REQUIRED)

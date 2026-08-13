@@ -1,5 +1,4 @@
 #pragma once
-#include <memory>
 #include <vector>
 
 #include "ThreadRunner.hpp"
@@ -10,8 +9,7 @@ namespace NodeSystem::ZMCore {
         using WorkerThread = ThreadRunner<ZMWorker>;
 
     public:
-        WorkerPool(zmq::context_t &zmq_context,
-                   Core::Nodes::NodeTable &nodeStore) : context(zmq_context), nodeStore(nodeStore) {
+        WorkerPool(zmq::context_t &zmq_context) : context(zmq_context) {
         }
 
         void initWorkers(const Core::WorkerInt workersCount) {
@@ -50,6 +48,7 @@ namespace NodeSystem::ZMCore {
     private:
         std::vector<WorkerThread> workers;
         zmq::context_t &context;
-        Core::Nodes::NodeTable &nodeStore;
+    public:
+        Core::Nodes::NodeTable nodeStore;
     };
 } // namespace NodeSystem::ZMCore

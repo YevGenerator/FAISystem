@@ -19,7 +19,15 @@ namespace NodeSystem::ZMCore::Queues::Policies {
     };
 
     template<typename T>
-    concept IsProtocolPolicy = IsPullProtocolPolicy<T> || IsPushProtocolPolicy<T>;
+    concept IsPushTCPServerProtocolPolicy =
+            requires(zmq::socket_ref socket, const Core::ID deviceId, const typename T::target_t &target)
+            {
+                typename T::target_t;
+                T::push(socket, target, deviceId);
+            };
+
+    template<typename T>
+    concept IsProtocolPolicy = IsPullProtocolPolicy<T> || IsPushProtocolPolicy<T> || IsPushTCPServerProtocolPolicy<T>;
 
     template<typename TTarget>
     struct PullerBase {
@@ -83,11 +91,10 @@ namespace NodeSystem::ZMCore::Queues::Policies {
             return target_t{clientId, std::move(payload)};
         }
 
-        static void push(zmq::socket_ref socket, Core::ID targetId, zmq::message_t &payload) {
-            zmq::message_t payloadCopy;
-            payloadCopy.copy(payload);
-            socket.send(zmq::buffer(&targetId, sizeof(targetId)), zmq::send_flags::sndmore);
-            socket.send(payloadCopy, zmq::send_flags::none);
+        template<typename TCmd>
+        static void push(zmq::socket_ref socket, const TCmd &cmd, Core::ID deviceId) {
+            socket.send(zmq::buffer(&deviceId, sizeof(deviceId)), zmq::send_flags::sndmore);
+            socket.send(zmq::buffer(&cmd, sizeof(TCmd)), zmq::send_flags::none);
         }
     };
 
@@ -111,4 +118,5 @@ namespace NodeSystem::ZMCore::Queues::Policies {
 
     static_assert(IsProtocolPolicy<ServerTcpProtocolPolicy>);
     static_assert(IsProtocolPolicy<ClientTcpProtocolPolicy>);
+    static_assert(IsPushTCPServerProtocolPolicy<ServerTcpProtocolPolicy>);
 } // namespace NodeSystem::ZMCore::Queues::Policies

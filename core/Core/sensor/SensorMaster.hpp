@@ -5,9 +5,10 @@
 namespace NodeSystem::Core::Sensors {
     template<Queue::Concepts::IsQueueResultPush TQueueResultPush>
     struct SensorMaster {
-        SensorStore sensors;
+        SensorStore sensors{};
         TQueueResultPush pusher;
 
+        SensorMaster(TQueueResultPush pusher) : pusher(std::move(pusher)) {}
         void emitSensors() {
             this->sensors.emitSensors([&](const Nodes::NodeResultMessage &msg) -> auto {
                 auto packet = Commands::CommandList::CreatePacket(msg);
