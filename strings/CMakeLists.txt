@@ -8,5 +8,5 @@ add_library(RP_Core_Strings INTERFACE
 target_link_libraries(RP_Core_Strings INTERFACE RP_Core)
 
 target_include_directories(RP_Core_Strings INTERFACE
-        ${CMAKE_CURRENT_SOURCE_DIR}
+        .
 )

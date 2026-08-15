@@ -6,4 +6,4 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(Temp main.cpp
 )
-target_include_directories(Temp PRIVATE ../../Core)
+target_include_directories(Temp PRIVATE ..)

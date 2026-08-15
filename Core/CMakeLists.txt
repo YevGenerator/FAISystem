@@ -37,5 +37,5 @@ add_library(RP_Core INTERFACE
 )
 
 target_include_directories(RP_Core INTERFACE
-        ${CMAKE_CURRENT_SOURCE_DIR}
+        .
 )

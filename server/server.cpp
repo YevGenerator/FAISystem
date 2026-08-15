@@ -1,5 +1,5 @@
-#include "../core/ZMCore/RpController.hpp"
-#include "../core/Core/Timer.hpp"
+#include "../coreі/ZMCore/RpController.hpp"
+#include "../coreі/Core/Timer.hpp"
 using namespace NodeSystem::Core;
 using RPServer = RpController<true>;
 int main() {

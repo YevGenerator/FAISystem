@@ -2,7 +2,7 @@
 #include <format>
 #include <string>
 
-#include "../Core/types/ConfigTypes.hpp"
+#include "../coreі/types/ConfigTypes.hpp"
 #include "types.hpp"
 #include "algos/base_algo.hpp"
 

@@ -11,8 +11,8 @@
 #include "../strings/cmd_keywords.hpp"
 #include "../strings/CommandParser.hpp"
 #include "../strings/Utils.hpp"
-#include "../Core/types.hpp"
-#include "../Core/commands/CommandList.hpp"
+#include "../coreі/types.hpp"
+#include "../coreі/commands/CommandList.hpp"
 
 namespace NodeSystem::Compiler {
     namespace s = Core::strings;

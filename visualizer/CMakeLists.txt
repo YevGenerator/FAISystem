@@ -29,7 +29,7 @@ add_executable(RPVisualizer main.cpp
         ArchitectureCanvas.hpp
 )
 
-target_include_directories(RPVisualizer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
+target_include_directories(RPVisualizer PRIVATE ../coreі)
 
 target_link_libraries(RPVisualizer PRIVATE
         imgui::imgui

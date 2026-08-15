@@ -1,5 +1,5 @@
 add_library(ZMCore INTERFACE
-       ConfigReader.hpp
+        ConfigReader.hpp
         RpController.hpp
         ThreadRunner.hpp
         ZMWorker.hpp

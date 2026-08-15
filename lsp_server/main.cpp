@@ -17,9 +17,9 @@
 
 #include <nlohmann/json.hpp>
 
-#include "../Core/commands/CommandList.hpp"
-#include "../Core/commands/CmdTypes.hpp"
-#include "../Core/types.hpp"
+#include "../coreі/commands/CommandList.hpp"
+#include "../coreі/commands/CmdTypes.hpp"
+#include "../coreі/types.hpp"
 
 #ifdef _WIN32
 #include <fcntl.h>

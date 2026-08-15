@@ -1,7 +1,7 @@
 #pragma once
 #include <string_view>
 
-namespace NodeSystem::Core::strings::Keywords {
+namespace NodeSystem::strings::Keywords {
     constexpr std::string_view Let = "let";
     constexpr std::string_view Device = "device";
     constexpr std::string_view Workers = "workers";
@@ -35,5 +35,5 @@ namespace NodeSystem::Core::strings::Keywords {
         constexpr std::string_view InB = "b_i";
         constexpr std::string_view InV = "v_i";
         constexpr std::string_view InG = "g_i";
-    }
-}
+    } // namespace Params
+} // namespace NodeSystem::strings::Keywords

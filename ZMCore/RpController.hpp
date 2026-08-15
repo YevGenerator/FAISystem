@@ -18,13 +18,13 @@
 
 #include "../strings/CommandParser.hpp"
 #include "ConfigReader.hpp"
-#include "../Core/logger/Logger.hpp"
-#include "../Core/nodes/NodeTable.hpp"
-#include "../Core/sensor/SensorMaster.hpp"
+#include "../coreі/logger/Logger.hpp"
+#include "../coreі/nodes/NodeTable.hpp"
+#include "../coreі/sensor/SensorMaster.hpp"
 #include "WorkerPool.hpp"
 #include "ZMRouter.hpp"
 #include "ZMSensors.hpp"
-#include "../Core/types/overload.hpp"
+#include "../coreі/types/overload.hpp"
 
 #include "../ZMCore/ZMBus.hpp"
 #include "../ZMCore/ThreadRunner.hpp"
@@ -36,10 +36,6 @@ namespace NodeSystem::ZMCore {
     template<bool IsServer>
     class RpController {
     public:
-        using ForwardPushQueue = std::conditional_t<IsServer,
-            Queues::ZMBusServerForwardPush,
-            Queues::ZMBusClientForwardPush>;
-
         using Header = Core::Events::EventHeader;
         using SensorThread = ThreadRunner<ZMSensors>;
         using RouterThread = ThreadRunner<ZMRouter>;
@@ -50,7 +46,7 @@ namespace NodeSystem::ZMCore {
               sensorThread(zmq_context),
               workerMaster(zmq_context),
               router(zmq_context),
-              forwardPush(zmq_context) {
+              networkBus(zmq_context) {
         }
 
 
@@ -188,6 +184,5 @@ namespace NodeSystem::ZMCore {
         WorkerPool workerMaster;
         RouterThread router;
         BusThread networkBus;
-        ForwardPushQueue forwardPush;
     };
 } // namespace NodeSystem::ZMCore

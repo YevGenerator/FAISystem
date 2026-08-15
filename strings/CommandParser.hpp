@@ -9,7 +9,7 @@
 
 #include "algoname_map.hpp"
 #include "cmd_keywords.hpp"
-#include "../Core/commands/CommandList.hpp"
+#include "../coreі/commands/CommandList.hpp"
 #include "types.hpp"
 
 

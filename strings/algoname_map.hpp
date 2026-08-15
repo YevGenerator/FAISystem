@@ -3,10 +3,10 @@
 
 #include "algos/algoholic.hpp"
 
-namespace NodeSystem::Core::strings {
+namespace NodeSystem::strings {
     class AlgoNames {
     private:
-        static constexpr std::array<std::string, Algo::Algoholic::count()> algoNames{
+        static constexpr std::array<std::string_view, Algo::Algoholic::count()> algoNames{
             "2SNO",
             "Dummy"
         };

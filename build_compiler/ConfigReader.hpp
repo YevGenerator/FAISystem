@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "../Core/commands/CommandList.hpp"
+#include "../coreі/commands/CommandList.hpp"
 
 namespace NodeSystem::Core {
     constexpr std::uint32_t MAGIC_BYTES = 0x46435052; // "RPCF"
