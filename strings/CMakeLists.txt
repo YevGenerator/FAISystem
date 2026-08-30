@@ -3,6 +3,7 @@ add_library(RP_Core_Strings INTERFACE
         CommandParser.hpp
         algoname_map.hpp
         utils.hpp
+        ValueParser.hpp
 )
 
 target_link_libraries(RP_Core_Strings INTERFACE RP_Core)
