@@ -10,7 +10,7 @@ namespace NodeSystem::ZMCore {
     public:
         using CoreWorker = Core::Nodes::Worker<Queues::ZMRouterPush, Queues::ZMWorkerPull>;
 
-        ZMWorker(const Core::WorkerInt id, zmq::context_t &context, Core::Nodes::NodeTable &nodeStore)
+        ZMWorker(const Core::types::WorkerInt id, zmq::context_t &context, Core::Nodes::NodeTable &nodeStore)
             : id(id), coreWorker(nodeStore, Queues::ZMRouterPush{context}, Queues::ZMWorkerPull{context}) {
         }
 
@@ -26,7 +26,7 @@ namespace NodeSystem::ZMCore {
             }
         }
 
-        Core::Byte id{};
+        Core::types::Byte id{};
 
     private:
         CoreWorker coreWorker;

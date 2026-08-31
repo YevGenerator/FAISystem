@@ -12,7 +12,7 @@ namespace NodeSystem::ZMCore {
         WorkerPool(zmq::context_t &zmq_context) : context(zmq_context) {
         }
 
-        void initWorkers(const Core::WorkerInt workersCount) {
+        void initWorkers(const Core::types::WorkerInt workersCount) {
             this->shutdown();
             this->workers.reserve(workersCount);
             for (auto i = 0; i < workersCount; i++) {
@@ -20,7 +20,7 @@ namespace NodeSystem::ZMCore {
             }
         }
 
-        void addActive(const Core::WorkerInt id) {
+        void addActive(const Core::types::WorkerInt id) {
             WorkerThread worker(id, this->context, this->nodeStore);
             worker.launch();
             this->workers.push_back(std::move(worker));
@@ -40,7 +40,7 @@ namespace NodeSystem::ZMCore {
         }
 
         [[nodiscard]]
-        auto count() const -> Core::WorkerInt {
+        auto count() const -> Core::types::WorkerInt {
             return this->workers.size();
         }
 
