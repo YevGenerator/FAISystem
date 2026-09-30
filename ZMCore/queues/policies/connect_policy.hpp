@@ -52,6 +52,10 @@ namespace NodeSystem::ZMCore::Queues::Policies {
             const auto address = IpCharAddress<>::ipCharEmptyAddress(ip);
             socket.bind(address.c_str());
         }
+
+        static void init(zmq::socket_t &socket, zmq::context_t &context, const Core::DeviceConfig &config) {
+            init(socket, context, config.serverAddress);
+        }
     };
 
     struct ClientTcpConnectPolicy {

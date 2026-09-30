@@ -1,13 +1,14 @@
 #pragma once
 #include <functional>
 #include <string>
+#include <types/basic.hpp>
 
 namespace NodeSystem::Core::Nodes {
     struct NodeId {
         types::ID level;
         types::ID index;
 
-        auto operator==(const NodeId &other) const -> bool {
+        constexpr auto operator==(const NodeId &other) const -> bool {
             return other.level == this->level && other.index == this->index;
         }
     };

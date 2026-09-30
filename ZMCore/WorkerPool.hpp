@@ -12,6 +12,14 @@ namespace NodeSystem::ZMCore {
         WorkerPool(zmq::context_t &zmq_context) : context(zmq_context) {
         }
 
+        void run(bool toRun) {
+            if (toRun) {
+                this->startAll();
+            } else {
+                this->shutdown();
+            }
+        }
+
         void initWorkers(const Core::types::WorkerInt workersCount) {
             this->shutdown();
             this->workers.reserve(workersCount);

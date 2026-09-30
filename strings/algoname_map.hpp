@@ -12,7 +12,7 @@ namespace NodeSystem::strings
             {"2SNO"};
 
     public:
-        static constexpr auto algoId(std::string_view name) -> Core::types::Byte
+        static constexpr auto algoId(std::string_view name) -> std::optional<Core::types::Byte>
         {
             for (unsigned i = 0; i < algoNames.size(); i++)
             {
@@ -21,11 +21,15 @@ namespace NodeSystem::strings
                     return i;
                 }
             }
-            return -1;
+            return std::nullopt;
         }
 
-        static constexpr auto algoName(Core::types::Byte algoId) -> std::string_view
+        static constexpr auto algoName(Core::types::Byte algoId) -> std::optional<std::string_view>
         {
+            if (algoId >= algoNames.size())
+            {
+                return std::nullopt;
+            }
             return algoNames[algoId];
         }
     };

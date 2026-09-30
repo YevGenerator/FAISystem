@@ -162,7 +162,7 @@ namespace NodeSystem::Core::Algo {
             }
 
             //auto alpha_out = noiseGenerator(cf_star, std_dev);
-            std::cout << "\tcf*" << ":\t" << cf_star << "\n";
+            //std::cout << "\tcf*" << ":\t" << cf_star << "\n";
             auto alpha = ro_global(cf_star, return_sign(nodeState.output.c, nodeState.output.a));
             bool toSwitch = false;
             if (alpha > nodeState.output.a && !nodeState.state) {
