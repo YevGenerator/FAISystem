@@ -5,21 +5,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 add_compile_options(-Wall -Wextra -O3)
 
-# 1. Підключаємо вбудований модуль CMake для завантаження
-include(FetchContent)
+find_package(nlohmann_json CONFIG REQUIRED)
 
-# 2. Оголошуємо, звідки і яку версію качати
-FetchContent_Declare(
-        json
-        GIT_REPOSITORY https://github.com/nlohmann/json.git
-        GIT_TAG v3.11.3 # Завжди краще вказувати конкретний реліз (тег)
-)
-
-# 3. Наказуємо CMake завантажити її прямо зараз
-FetchContent_MakeAvailable(json)
-
-# 4. Створюємо твій виконуваний файл LSP
-# (Вкажи тут свої реальні файли: main.cpp, LspFeatures.cpp тощо)
 add_executable(rpconfig-lsp main.cpp)
 
 # 5. Прив'язуємо бібліотеку до твого проєкту

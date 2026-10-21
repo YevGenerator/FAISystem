@@ -1,91 +1,54 @@
 #pragma once
-#include <format>
-#include <fstream>
-#include <iosfwd>
 #include <iostream>
-#include <map>
-#include <regex>
-#include <variant>
+#include "binary_writer.hpp"
+#include "command_parser.hpp"
+#include "ParserContext.hpp"
 
-#include "ConfigReader.hpp"
-#include "../strings/cmd_keywords.hpp"
-#include "../strings/CommandParser.hpp"
-#include "../strings/Utils.hpp"
-#include "../coreі/types.hpp"
-#include "../coreі/commands/CommandList.hpp"
-
-namespace NodeSystem::Compiler {
-    namespace s = Core::strings;
-    namespace t = Core::types;
-    class ConfigCompiler {
-
-        template<typename Cmd>
-        static void writeCmd(std::ofstream &out, const Cmd &cmd) {
-            const t::Byte op = Core::CommandList::id<Cmd>;
-            out.write(reinterpret_cast<const char *>(&op), 1);
-            out.write(reinterpret_cast<const char *>(&cmd), sizeof(Cmd));
-        }
+namespace NodeSystem::Compiler
+{
+    class ConfigCompiler
+    {
     public:
-        static void compile(const std::string &inFile, const std::string &outFile) {
-            std::ifstream in(inFile);
-            std::ofstream out(outFile, std::ios::binary);
+        static bool compile(std::string_view source, std::ostream& out)
+        {
+            strings::ParserContext ctx;
+            std::string_view stream = source;
+            const BinaryWriter emitter{out};
 
-            if (!in || !out) {
-                std::cerr << "File access error.\n";
-                return;
-            }
+            while (true)
+            {
+                strings::Preparser::consumeWhitespaceAndComments(stream);
+                if (stream.empty())
+                {
+                    break;
+                }
 
-            Core::FileHeader header{};
-            out.write(reinterpret_cast<const char *>(&header), sizeof(header));
+                std::string_view lookahead = stream;
+                std::string_view firstToken = strings::Preparser::consumeNextToken(lookahead);
 
-            std::string fullText, line;
-            while (std::getline(in, line)) {
-                line = s::CommandParser::trim(line);
-                if (!line.empty() && line[0] != '#') fullText += line + " ";
-            }
-
-            std::map<std::string, std::string> env;
-            Core::types::ID currentDevice = 0;
-
-            namespace kw = s::Keywords;
-            auto row =
-                    {kw::Let, kw::Device, kw::Workers, kw::Ip, kw::Node, kw::Sensor, kw::BindE, kw::Bind, kw::Run, kw::Read};
-            std::regex cmdRegex(std::format(R"(\b({})\b)", s::Utils::join(row, "|")));
-            auto words_begin = std::sregex_iterator(fullText.begin(), fullText.end(), cmdRegex);
-            auto words_end = std::sregex_iterator();
-
-            std::vector<std::string> rawCommands;
-            for (std::sregex_iterator i = words_begin; i != words_end; ++i) {
-                std::sregex_iterator next = i;
-                ++next;
-                std::size_t start = i->position();
-                std::size_t end = (next != words_end) ? next->position() : fullText.length();
-                rawCommands.push_back(s::CommandParser::trim(fullText.substr(start, end - start)));
-            }
-
-            for (const auto &rawCmd: rawCommands) {
-                auto tokens = s::CommandParser::splitTokens(rawCmd);
-                if (tokens.empty()) continue;
-
-                if (tokens[0] == kw::Let && tokens.size() >= 4) {
-                    const std::string& name = tokens[2];
-                    std::string val = rawCmd.substr(rawCmd.find('=') + 1);
-                    env[name] = s::CommandParser::trim(val);
+                if (firstToken == strings::Keywords::Cmd::Let)
+                {
+                    stream = lookahead;
+                    if (!strings::CommandParser::parseLet(stream, ctx))
+                    {
+                        std::cerr << "[Error] Failed to parse 'let' statement!\n";
+                        return false;
+                    }
                     continue;
                 }
 
-                auto variants = s::CommandParser::parseCommand(rawCmd, env, currentDevice);
-
-                for (const auto &var: variants) {
-                    std::visit([&out](const auto &cmd) {
-                        using T = std::decay_t<decltype(cmd)>;
-                        if constexpr (!std::is_same_v<T, std::monostate>) {
-                            writeCmd(out, cmd);
-                        }
-                    }, var);
+                auto parsedCmd = strings::CommandParser::parseNextCommand(stream, ctx);
+                if (!parsedCmd)
+                {
+                    std::cerr << "[Error] Syntax error or unknown command near: "
+                              << stream.substr(0, std::min<size_t>(stream.size(), 40)) << "...\n";
+                    return false;
                 }
-            }
-        }
 
+                std::visit(emitter, *parsedCmd);
+            }
+
+            return true;
+        }
     };
 }

@@ -109,10 +109,8 @@ namespace NodeSystem::ZMCore::Queues::Policies {
             return payload;
         }
 
-        static void push(zmq::socket_ref socket, zmq::message_t &payload) {
-            zmq::message_t payloadCopy;
-            payloadCopy.copy(payload);
-            socket.send(payloadCopy, zmq::send_flags::none);
+        static void push(zmq::socket_ref socket, const zmq::message_t &payload) {
+            socket.send(zmq::buffer(payload.data(), payload.size()), zmq::send_flags::none);
         }
     };
 

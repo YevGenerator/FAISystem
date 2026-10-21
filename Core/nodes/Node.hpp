@@ -2,7 +2,6 @@
 
 #include "DataSlot.hpp"
 #include "NodeId.hpp"
-#include <mutex>
 
 #include "../algos/algoholic.hpp"
 #include "NodeInfo.hpp"
@@ -51,6 +50,6 @@ namespace NodeSystem::Core::Nodes {
         bool isUp{};
 
     protected:
-        mutable std::mutex mutex;
+        //mutable std::mutex mutex;
     };
 } // namespace NodeSystem::Core::Nodes
