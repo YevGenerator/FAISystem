@@ -15,7 +15,7 @@ add_library(RP_Core INTERFACE
         commands/CommandList.hpp
         commands/CmdTypes.hpp
         algos/algoholic.hpp
-        algos/base_algo.hpp
+        algos/2SNO/base_algo.hpp
         random/gaussian_noise.hpp
         types/basic.hpp
         algos/AlgoResult.hpp
@@ -34,6 +34,22 @@ add_library(RP_Core INTERFACE
         nodes/NodeInfo.hpp
         nodes/Worker.hpp
         __temp/to_remove.cpp
+        algos/2SNO/predefined.hpp
+        algos/types.hpp
+        algos/2SNO/steps/evaluate_time.hpp
+        algos/2SNO/steps/extract_time.hpp
+        algos/2SNO/steps/cf.hpp
+        algos/2SNO/steps/ro.hpp
+        algos/utils.hpp
+        algos/2SNO/steps/cf_star.hpp
+        algos/2SNO/steps/alpha.hpp
+        algos/2SNO/steps/cf_slot_pipeline.hpp
+        algos/2SNO/steps/cf_slot_pipeline.hpp
+        algos/2SNO/is_slot_sink.hpp
+        algos/2SNO/steps/direct_sum_accumulator.hpp
+        algos/2SNO/steps/direct_sum_accumulator.hpp
+        algos/2SNO/inspecting_sink.hpp
+        algos/2SNO/steps/direct_sum_accumulator.hpp
 )
 
 target_include_directories(RP_Core INTERFACE

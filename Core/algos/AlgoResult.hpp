@@ -1,9 +1,10 @@
 #pragma once
+#include "types.hpp"
 
 namespace NodeSystem::Core::Algo {
     struct AlgoResult {
         bool toSwitch{false};
-        double alpha{};
+        AlgoFloat alpha{};
     };
 
 } // namespace NodeSystem::Core::Algo

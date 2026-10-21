@@ -1,12 +1,12 @@
 #pragma once
 #include "AlgoResult.hpp"
-#include "base_algo.hpp"
+#include "2SNO/base_algo.hpp"
 #include "nodes/NodeInfo.hpp"
 
 
 namespace NodeSystem::Core::Algo {
     template<typename... TAlgos>
-    struct AlgoholRegister {
+    struct AlgoRegister {
         static constexpr auto count() {
             return sizeof...(TAlgos);
         }
@@ -26,15 +26,15 @@ namespace NodeSystem::Core::Algo {
             if constexpr (I < sizeof...(TAlgos)) {
                 if (I == index) {
                     using CurrentAlgo = GetAlgo<I>;
-                    return CurrentAlgo::process(state);
+                    return CurrentAlgo::calculate(state);
                 }
                 return dispatch<I + 1>(index, state);
             } else {
                 using DefaultAlgo = GetAlgo<0>;
-                return DefaultAlgo::process(state);
+                return DefaultAlgo::calculate(state);
             }
         }
     };
 
-    using Algoholic = AlgoholRegister<AlgoTwoSNO>;
+    using Algoholic = AlgoRegister<twoSNO::AlgoTwoSNO>;
 } // namespace NodeSystem::Core::Algo
