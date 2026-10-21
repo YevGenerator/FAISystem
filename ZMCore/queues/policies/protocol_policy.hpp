@@ -20,7 +20,7 @@ namespace NodeSystem::ZMCore::Queues::Policies {
 
     template<typename T>
     concept IsPushTCPServerProtocolPolicy =
-            requires(zmq::socket_ref socket, const Core::ID deviceId, const typename T::target_t &target)
+            requires(zmq::socket_ref socket, const Core::types::ID deviceId, const typename T::target_t &target)
             {
                 typename T::target_t;
                 T::push(socket, target, deviceId);
@@ -72,7 +72,7 @@ namespace NodeSystem::ZMCore::Queues::Policies {
 
 
     struct ServerTcpProtocolPolicy {
-        using target_t = std::pair<Core::ID, zmq::message_t>;
+        using target_t = std::pair<Core::types::ID, zmq::message_t>;
 
         static auto pull(zmq::socket_ref socket) -> std::optional<target_t> {
             zmq::message_t identity;
@@ -80,7 +80,7 @@ namespace NodeSystem::ZMCore::Queues::Policies {
                 return std::nullopt;
             }
 
-            Core::ID clientId{};
+            Core::types::ID clientId{};
             std::memcpy(&clientId, identity.data(), std::min(sizeof(clientId), identity.size()));
 
             zmq::message_t payload;
@@ -92,7 +92,7 @@ namespace NodeSystem::ZMCore::Queues::Policies {
         }
 
         template<typename TCmd>
-        static void push(zmq::socket_ref socket, const TCmd &cmd, Core::ID deviceId) {
+        static void push(zmq::socket_ref socket, const TCmd &cmd, Core::types::ID deviceId) {
             socket.send(zmq::buffer(&deviceId, sizeof(deviceId)), zmq::send_flags::sndmore);
             socket.send(zmq::buffer(&cmd, sizeof(TCmd)), zmq::send_flags::none);
         }

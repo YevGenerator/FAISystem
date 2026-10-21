@@ -2,8 +2,8 @@
 #include <charconv>
 #include <optional>
 #include <string_view>
-#include "StringUtils.hpp"
-#include "nodes/NodeId.hpp" // З вашого Core
+#include "nodes/NodeId.hpp"
+#include "types/basic.hpp"
 
 namespace NodeSystem::strings {
 
