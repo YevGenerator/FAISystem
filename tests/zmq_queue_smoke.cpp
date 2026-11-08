@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <zmq.hpp>
 #include "Timer.hpp"
+#include "events/EventCounter.hpp"
 #include "commands/CommandList.hpp"
 #include "ZMCore/queues/ZMQueueList.hpp"
 
