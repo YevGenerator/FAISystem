@@ -1,5 +1,7 @@
 #pragma once
 #include "ZMQueueBase.hpp"
+#include "queue/concepts/is_queue_pull.hpp"
+#include "queue/concepts/is_queue_push.hpp"
 #include "policies/policy_list.hpp"
 
 namespace NodeSystem::ZMCore::Queues {
