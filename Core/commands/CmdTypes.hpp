@@ -1,6 +1,7 @@
 #pragma once
 
 #include <limits>
+#include <array>
 
 #include "../types/basic.hpp"
 #include "types/NetField.hpp"
@@ -67,6 +68,7 @@ namespace NodeSystem::Core::Commands {
                 .id = {.level = id_lvl, .index = id_val},
                 .algoType = algo,
                 .output = {.c = output_c, .a = output_a},
+                .inputs_count = inputs_count,
             };
         }
     };

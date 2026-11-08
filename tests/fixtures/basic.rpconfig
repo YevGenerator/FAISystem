@@ -1,0 +1,13 @@
+# Regression fixture for compiler, decompiler and runtime
+let KgInput first = <c_i="up" a_i=0.7500 b_i=0 v_i=0.1000 g_i=0.5000>
+let []KgInput inputs = [
+    first
+    <c_i="down" a_i=0.3000 b_i=1 v_i=0.1500 g_i=0.8500>
+]
+device 1
+workers 2
+ip <host=127.0.0.1 port=7779>
+sensor <deviceId=1 id=10>
+node <deviceId=1 id=1.0 algo="2SNO" output=<c="up" a=0.8500> inputs=inputs>
+bindE <from=<deviceId=1 id=0.10> to=[ <deviceId=1 id=1.0 in=0> ]>
+run <deviceId=1 toRun=true>

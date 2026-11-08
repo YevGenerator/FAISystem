@@ -2,6 +2,8 @@
 
 #include <stop_token>
 #include <array>
+#include <optional>
+#include "logger/Logger.hpp"
 #include <zmq.hpp>
 
 #include "CmdProcessor.hpp"
@@ -10,11 +12,15 @@
 #include "queues/ZMQueueList.hpp"
 
 namespace NodeSystem::ZMCore {
-    inline auto readNetworkPacket(const zmq::message_t &payload) {
-        const auto *data = payload.data<const char>();
-        const auto messageType = static_cast<Core::types::Byte>(data[0]);
-        constexpr auto networkRead = Core::Commands::CommandList::handlersNetwork();
-        return networkRead[messageType](data);
+    inline auto readNetworkPacket(const zmq::message_t &payload)
+        -> std::optional<Core::Commands::NetworkPacket<Core::Commands::CommandList::Variant>> {
+        if (payload.empty()) return std::nullopt;
+        const auto* data = payload.data<const char>();
+        auto messageType = static_cast<Core::types::Byte>(static_cast<unsigned char>(data[0]));
+        constexpr auto readers = Core::Commands::CommandList::handlersNetwork();
+        constexpr auto sizes = Core::Commands::CommandList::networkPacketSizes();
+        if (messageType >= readers.size() || payload.size() != sizes[messageType]) return std::nullopt;
+        return readers[messageType](data);
     }
 
     template<bool IsServer>
@@ -56,6 +62,7 @@ namespace NodeSystem::ZMCore {
             while (!stopToken.stop_requested()) {
                 if (needs_reconnect.load(std::memory_order_relaxed)) {
                     this->reconnectTcp();
+                    pollItems[0].socket = tcpQueue.socket.handle();
                     needs_reconnect.store(false, std::memory_order_relaxed);
                 }
 
@@ -81,8 +88,12 @@ namespace NodeSystem::ZMCore {
             if (auto msg = tcpQueue.pull()) {
                 auto &[clientId, payload] = *msg;
                 if (!payload.empty()) {
-                    auto command = readNetworkPacket(payload);
-                    processor.executePacket(command);
+                    if (auto command = readNetworkPacket(payload)) {
+                        Core::LoggerBin.log(Core::types::logs::LogReceivedTcpCommand{
+                            clientId, config.deviceId
+                        }, Core::LoggerBin.newEvent(command->eventHeader));
+                        processor.executePacket(*command);
+                    }
                 }
             }
         }
@@ -93,8 +104,12 @@ namespace NodeSystem::ZMCore {
             }
 
             if (auto msg = tcpQueue.pull()) {
-                auto command = readNetworkPacket(*msg);
-                processor.executePacket(command);
+                if (auto command = readNetworkPacket(*msg)) {
+                    Core::LoggerBin.log(Core::types::logs::LogReceivedTcpCommand{
+                        0, config.deviceId
+                    }, Core::LoggerBin.newEvent(command->eventHeader));
+                    processor.executePacket(*command);
+                }
             }
         }
 
@@ -103,10 +118,12 @@ namespace NodeSystem::ZMCore {
                 return;
             }
 
-            if (auto msg = forwardQueue.pull()) {
-                auto &[targetId, payload] = *msg;
+            if (auto packet = forwardQueue.pull()) {
                 try {
-                    tcpQueue.push(targetId, payload);
+                    Core::LoggerBin.log(Core::types::logs::LogSendTcpCommand{
+                        config.deviceId, packet->data.deviceId
+                    }, Core::LoggerBin.newEvent(packet->eventHeader));
+                    tcpQueue.push(packet->data.deviceId, *packet);
                 } catch (const zmq::error_t &) {
                 }
             }
@@ -117,9 +134,12 @@ namespace NodeSystem::ZMCore {
                 return;
             }
 
-            if (auto msg = forwardQueue.pull()) {
+            if (auto packet = forwardQueue.pull()) {
                 try {
-                    tcpQueue.push(*msg);
+                    Core::LoggerBin.log(Core::types::logs::LogSendTcpCommand{
+                        config.deviceId, packet->data.deviceId
+                    }, Core::LoggerBin.newEvent(packet->eventHeader));
+                    tcpQueue.push(*packet);
                 } catch (const zmq::error_t &) {
                 }
             }

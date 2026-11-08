@@ -1,0 +1,39 @@
+name: Windows C++20 build and logging smoke
+on:
+  push:
+    branches:
+      - 'fix/logging-visualizer-runtime-20261108'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-2022
+    env:
+      VCPKG_DEFAULT_TRIPLET: x64-windows
+    steps:
+      - name: Checkout working branch
+        uses: actions/checkout@v4
+
+      - name: Prepare MSVC
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Bootstrap vcpkg
+        shell: pwsh
+        run: |
+          if (-not $env:VCPKG_INSTALLATION_ROOT) {
+            throw "VCPKG_INSTALLATION_ROOT is missing from runner"
+          }
+          & "$env:VCPKG_INSTALLATION_ROOT\\bootstrap-vcpkg.bat" -disableMetrics
+
+      - name: Configure with vcpkg
+        shell: pwsh
+        run: |
+          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 "-DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
+
+      - name: Build every module
+        shell: pwsh
+        run: cmake --build build --config Release --parallel 2
+
+      - name: Run native tests
+        shell: pwsh
+        run: ctest --test-dir build -C Release --output-on-failure

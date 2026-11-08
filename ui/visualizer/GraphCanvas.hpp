@@ -336,12 +336,12 @@ namespace NodeSystem::Visual {
                 if (selBlock->blockType == SelectionType::Node) {
                     auto* vNode = static_cast<VisualNode*>(selBlock);
                     if (currentSelection.slotIndex >= 0 && currentSelection.slotIndex < vNode->coreNode->inputs.size()) {
-                        const auto& kgIn = vNode->coreNode->inputs[currentSelection.slotIndex].input;
+                        const auto& kgIn = vNode->coreNode->inputs[currentSelection.slotIndex].kgt;
                         ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.4f, 1.0f), "Input Slot %d", currentSelection.slotIndex);
                         ImGui::Separator();
                         ImGui::Text("Structure Data (KgInput):");
-                        ImGui::BulletText("c_i: %s", kgIn.c_i.get() ? "true" : "false");
-                        ImGui::BulletText("a_i: %.3f", kgIn.a_i.get());
+                        ImGui::BulletText("c_i: %s", kgIn.c.get() ? "true" : "false");
+                        ImGui::BulletText("a_i: %.3f", kgIn.a.get());
 
                         if (vNode->lastReceivedData.contains(currentSelection.slotIndex)) {
                             ImGui::Separator();
@@ -370,7 +370,7 @@ namespace NodeSystem::Visual {
                 auto *vNode = static_cast<VisualNode *>(selBlock);
                 ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.0f, 1.0f), "Node Selected");
                 ImGui::Separator();
-                ImGui::Text("Node ID: N%d.%d", vNode->coreNode->id.level, vNode->coreNode->id.index);
+                ImGui::Text("Node ID: N%d.%d", vNode->coreNode->nodeId.level, vNode->coreNode->nodeId.index);
                 ImGui::Text("Algorithm ID: %d", vNode->coreNode->algoType);
                 ImGui::Text("Inputs Count: %zu", vNode->coreNode->inputs.size());
             } else if (currentSelection.type == SelectionType::OutputSlot) {
@@ -382,7 +382,7 @@ namespace NodeSystem::Visual {
                     ImGui::Text("Sensor Output Value: %.3f", vSensor->toEmit);
                 } else if (selBlock->blockType == SelectionType::Node) {
                     auto *vNode = static_cast<VisualNode *>(selBlock);
-                    const auto &kgOut = vNode->coreNode->output.output;
+                    const auto &kgOut = vNode->coreNode->output;
 
                     ImGui::Text("Data (KgOutput):");
                     ImGui::BulletText("c: %s", kgOut.c.get() ? "true" : "false");

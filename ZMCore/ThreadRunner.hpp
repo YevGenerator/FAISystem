@@ -1,5 +1,7 @@
 #pragma once
 #include <thread>
+#include <concepts>
+#include <utility>
 
 namespace NodeSystem::ZMCore {
     template<typename T>
@@ -31,7 +33,10 @@ namespace NodeSystem::ZMCore {
         }
 
         void shutdown() {
-            this->thread.request_stop();
+            if (this->thread.joinable()) {
+                this->thread.request_stop();
+                this->thread.join();
+            }
         }
 
         [[nodiscard]]

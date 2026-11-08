@@ -3,6 +3,8 @@
 #include <string>
 #include <map>
 #include "color_names.hpp"
+#include "floats_map.hpp"
+#include "colors_map.hpp"
 #include "SelectionType.hpp"
 
 namespace NodeSystem::Visual {

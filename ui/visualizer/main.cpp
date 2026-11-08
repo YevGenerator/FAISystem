@@ -3,23 +3,27 @@
 #include <imgui_impl_opengl3.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <filesystem>
+#include <vector>
+#include <string>
+#include <algorithm>
 
 // Підключаємо твою логіку
-#include "../Core/nodes/Node.hpp"
+#include "nodes/Node.hpp"
 
 // Підключаємо візуалізацію
 #include "ArchitectureCanvas.hpp"
 #include "colors_map.hpp"
 #include "floats_map.hpp"
 #include "GraphCanvas.hpp"
-#include "../Core/logger/Logger.hpp"
+#include "logger/Logger.hpp"
 #include "LogParser.hpp"
 #include "SettingsPanel.hpp"
 #include "VisualSensor.hpp"
 
 using namespace NodeSystem::Core;
 
-int main() {
+int main(int argc, char** argv) {
     // 1. Ініціалізація GLFW та OpenGL (стандартний бойлерплейт)
     if (!glfwInit()) return -1;
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -47,11 +51,21 @@ int main() {
     NodeSystem::Visual::GraphCanvas canvas;
 
     // Вектор шляхів до файлів логів різних процесів/пристроїв
-    std::vector<std::string> logFiles = {
-        R"(C:\Users\perce\CLionProjects\RP2\include\system\cmake-build-debug\server\log.bin)",
-          R"(C:\Users\perce\CLionProjects\RP2\include\system\cmake-build-debug\build1\log.bin)",
-          R"(C:\Users\perce\CLionProjects\RP2\include\system\cmake-build-debug\build2\log.bin)"
-    };
+    std::vector<std::filesystem::path> logFiles;
+    // Explicit paths from CLI; otherwise discover generated *.log.bin files in CWD.
+    for (int i = 1; i < argc; ++i) logFiles.emplace_back(argv[i]);
+    if (logFiles.empty()) {
+        for (const auto& entry : std::filesystem::directory_iterator(std::filesystem::current_path())) {
+            if (!entry.is_regular_file()) continue;
+            const auto& name = entry.path().filename().native();
+            const auto suffix = std::filesystem::path(".log.bin").native();
+            if (name.ends_with(suffix)) logFiles.push_back(entry.path());
+        }
+        std::sort(logFiles.begin(), logFiles.end());
+    }
+    if (logFiles.empty()) {
+        std::cerr << "No log files supplied. Usage: RPVisualizer <server.log.bin> <servant-2.log.bin> ...\n";
+    }
 
     // Парсер проаналізує всі файли, зшиє їх по parentId->eventId і зупиниться на LogRun
     NodeSystem::Visual::LogParser::parseAndExecute(logFiles, canvas, archCanvas);

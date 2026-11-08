@@ -7,7 +7,7 @@ namespace NodeSystem::Visual {
     class VisualDevice : public VisualBlock {
     public:
         std::vector<VisualBlock*> blocks;
-        Core::types::SmallInt workersNumber = 0;
+        Core::types::WorkerInt workersNumber = 0;
         std::string ipAddress = "0.0.0.0:0";
 
         VisualDevice(int id, ImVec2 position)

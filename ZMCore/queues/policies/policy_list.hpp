@@ -7,8 +7,8 @@
 
 namespace NodeSystem::ZMCore::Queues::Policies {
     using WorkerPullConnectPolicy = ConnectPullPolicy<"inproc://workers">;
-    using WorkerPushConnectPolicy = ConnectPushPolicy<"inproc://workers">;
-    using RouterPullConnectPolicy = ConnectPullPolicy<"inproc://router">;
+    using WorkerPushConnectPolicy = BindPushPolicy<"inproc://workers">;
+    using RouterPullConnectPolicy = BindPullPolicy<"inproc://router">;
     using RouterPushConnectPolicy = ConnectPushPolicy<"inproc://router">;
     using ForwardPushConnectPolicy = ConnectPushPolicy<"inproc://forward">;
     using ForwardPullConnectPolicy = BindPullPolicy<"inproc://forward">;

@@ -8,31 +8,32 @@
 
 #include "algoname_map.hpp"
 #include "color_names.hpp"
-#include "../Core/nodes/Node.hpp"
+#include "nodes/Node.hpp"
+#include "logger/LogRecordTypes.hpp"
 #include "SelectionType.hpp"
 #include "VisualBlock.hpp"
 
 namespace NodeSystem::Visual {
     class VisualNode : public VisualBlock {
     public:
-        Core::Nodes *coreNode;
+        Core::Nodes::Node *coreNode;
 
         std::map<int, Core::types::ProcessData> lastReceivedData;
 
-        VisualNode(int devId, Core::Nodes *node, ImVec2 position)
-            : VisualBlock(position, SelectionType::Node, devId, node->id.level, node->id.index), coreNode(node) {
+        VisualNode(int devId, Core::Nodes::Node *node, ImVec2 position)
+            : VisualBlock(position, SelectionType::Node, devId, node->nodeId.level, node->nodeId.index), coreNode(node) {
         }
 
         [[nodiscard]] auto algoName() const {
-            return Core::strings::AlgoNames::algoName(coreNode->algoType).begin();
+            return NodeSystem::strings::AlgoNames::algoName(coreNode->algoType).value_or("Unknown");
         }
 
         std::string title() override {
-            return std::format("N{0}.{1}", coreNode->id.level, coreNode->id.index);
+            return std::format("N{0}.{1}", coreNode->nodeId.level, coreNode->nodeId.index);
         }
 
         uint32_t getLevel() const override {
-            return coreNode->id.level;
+            return coreNode->nodeId.level;
         }
 
         float height() const override {

@@ -5,6 +5,8 @@
 #include "../Timer.hpp"
 #include "LogRecordTypes.hpp"
 #include <fstream>
+#include <type_traits>
+#include "events/EventCounter.hpp"
 
 namespace NodeSystem::Core {
     template<typename... T>
@@ -23,7 +25,7 @@ namespace NodeSystem::Core {
         template<typename P>
         struct LogRecord {
             types::Byte logType = id<P>;
-            EventCounter::EventHeader header;
+            Events::EventHeader header;
             types::UsInt timeStamp{};
             P data;
 
@@ -34,8 +36,8 @@ namespace NodeSystem::Core {
 #pragma pack(pop)
 
         template<typename P>
-        static constexpr LogRecord<P> CreateLogRecord(const P &data,
-                                                      const EventCounter::EventHeader &header = EventCounter::event()) {
+        static LogRecord<P> CreateLogRecord(const P &data,
+                                                      const Events::EventHeader &header) {
             return LogRecord<P>{
                 .header = header,
                 .timeStamp = Timer::elapsedNow(),
@@ -46,11 +48,8 @@ namespace NodeSystem::Core {
         using Variant = std::variant<std::monostate, T...>;
 
         template<typename P>
-        static constexpr auto readLogRecord(std::ifstream& in) {
-            LogRecord<Variant> record;
-            in.read( reinterpret_cast<char *>(&record.header), sizeof(record.header));
-            in.read(reinterpret_cast<char *>(&record.data), sizeof(P));
-            return record;
+        static bool readLogRecord(std::istream& in, LogRecord<P>& record) {
+            return static_cast<bool>(in.read(reinterpret_cast<char*>(&record), sizeof(record)));
         }
     };
 

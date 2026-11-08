@@ -1,6 +1,8 @@
 #pragma once
 
 #include <span>
+#include <vector>
+#include <utility>
 #include "NodeId.hpp"
 
 namespace NodeSystem::Core::Nodes {
@@ -22,8 +24,8 @@ namespace NodeSystem::Core::Nodes {
         AddressList() = default;
 
         AddressList(std::vector<InternalAddress> &&internal,
-                    std::vector<ExternalAddress> &&external) : internalAddresses(internal),
-                                                               externalAddresses(external) {
+                    std::vector<ExternalAddress> &&external) : internalAddresses(std::move(internal)),
+                                                               externalAddresses(std::move(external)) {
         }
 
         auto internal() -> auto & {

@@ -11,8 +11,12 @@ add_executable(rpdecompiler main_decompiler.cpp
         cli_base.hpp
 )
 
-target_link_options(rpcompiler PRIVATE -static)
-target_link_options(rpdecompiler PRIVATE -static)
+if(MINGW)
+    target_link_options(rpcompiler PRIVATE -static)
+endif()
+if(MINGW)
+    target_link_options(rpdecompiler PRIVATE -static)
+endif()
 
 target_link_libraries(rpcompiler PRIVATE
         RP_Core_Strings

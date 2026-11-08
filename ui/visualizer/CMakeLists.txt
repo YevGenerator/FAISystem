@@ -26,7 +26,6 @@ add_executable(RPVisualizer main.cpp
         VisualArchDevice.hpp
         ArchTypes.hpp
         ArchitectureCanvas.hpp
-        ../core/main.cpp
 )
 
 target_link_libraries(RPVisualizer PRIVATE
@@ -34,7 +33,6 @@ target_link_libraries(RPVisualizer PRIVATE
         glfw
         OpenGL::GL
         RP_Core_Strings
-        Fai_ui_core
 )
 
-add_definitions(-DIMGUI_DEFINE_MATH_OPERATORS)
+target_compile_definitions(RPVisualizer PRIVATE IMGUI_DEFINE_MATH_OPERATORS)

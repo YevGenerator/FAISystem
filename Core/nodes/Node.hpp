@@ -1,6 +1,8 @@
 #pragma once
 
 #include "DataSlot.hpp"
+#include <memory>
+#include <mutex>
 #include "NodeId.hpp"
 
 #include "../algos/algoholic.hpp"
@@ -19,18 +21,23 @@ namespace NodeSystem::Core::Nodes {
         }
 
         void addInput(const NodeAddInputInfo &addInputInfo) {
+            std::scoped_lock lock(*processingMutex);
+            if (addInputInfo.inputId >= inputs.size()) return;
             this->inputs[addInputInfo.inputId].kgt = addInputInfo.inputData;
         }
 
         void reserveInputs(const types::ID count) {
-            this->inputs.reserve(count);
+            this->inputs.resize(count);
         }
 
         auto acceptMessage(const NodeTimedProcessMessage &message) {
+            std::scoped_lock lock(*processingMutex);
+            if (message.slotId >= inputs.size()) return Algo::AlgoResult{};
             auto &input = this->inputs[message.slotId];
             input.alpha = message.alpha;
             input.theta = message.theta;
             auto result = Algo::Algoholic::execute(this->algoType, this->nodeAlgoState(message));
+            if (result.toSwitch) isUp = !isUp;
             return result;
         }
 
@@ -49,7 +56,7 @@ namespace NodeSystem::Core::Nodes {
         types::Byte algoType = 0;
         bool isUp{};
 
-    protected:
-        //mutable std::mutex mutex;
+    private:
+        std::shared_ptr<std::mutex> processingMutex = std::make_shared<std::mutex>();
     };
 } // namespace NodeSystem::Core::Nodes

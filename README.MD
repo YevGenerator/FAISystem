@@ -31,6 +31,8 @@ Detailed documentation, architecture specifications, and guides are organized in
   *Step-by-step tutorial on building tools, writing `.rpconfig` scripts, compiling to `.bin`, and environment verification.*
 - **[Quick Start: Running CLI Executables Guide](./docs/cli_serves.md)**  
   *Deployment, launching and using programs of `cli_serv` executables*
+- **[Windows 11 Logging and Visualizer Guide](./docs/windows-logging.md)**  
+  *MSVC/vcpkg setup, causal binary logs, running multiple devices and replaying traces*
 
 ---
 

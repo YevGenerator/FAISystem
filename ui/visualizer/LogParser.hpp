@@ -1,5 +1,6 @@
 #pragma once
 #include <fstream>
+#include <filesystem>
 #include <vector>
 #include <map>
 #include <set>
@@ -9,17 +10,18 @@
 #include <algorithm>
 
 #include "ArchTypes.hpp"
-#include "../Core/logger/LogRecordList.hpp"
+#include "logger/LogRecordList.hpp"
 #include "GraphCanvas.hpp"
+#include "ArchitectureCanvas.hpp"
 #include "VisualSensor.hpp"
 #include "VisualNode.hpp"
 
 namespace NodeSystem::Visual {
     using GlobalEventKey = std::pair<uint32_t, uint64_t>;
-    inline GlobalEventKey makeKey(const Core::EventCounter::EventId &id) { return {id.deviceId, id.localEventId}; }
+    inline GlobalEventKey makeKey(const Core::Events::EventId &id) { return {id.deviceId, id.localEventId}; }
 
     struct ParsedEvent {
-        Core::EventCounter::EventHeader header;
+        Core::Events::EventHeader header;
         uint64_t timeStamp;
         Core::types::Byte logType;
         std::function<void(GraphCanvas &)> applyToCanvas;
@@ -28,6 +30,7 @@ namespace NodeSystem::Visual {
         int level = -1;
         int index = -1;
         int slot = -1;
+        int worker = -1;
         Core::types::ProcessData data{};
 
         uint64_t traceKey() const {
@@ -40,19 +43,6 @@ namespace NodeSystem::Visual {
     }
 
     class LogParser {
-        template<typename P>
-        static constexpr auto readLogRecord(std::ifstream &in) {
-            Core::LogRecordList::LogRecord<Core::LogRecordList::Variant> record;
-            in.read(reinterpret_cast<char *>(&record.header), sizeof(record.header));
-            in.read(reinterpret_cast<char *>(&record.data), sizeof(P));
-            return record;
-        }
-
-        template<typename... T>
-        static constexpr auto readHandlers() {
-            return std::array{readLogRecord<T>...};
-        }
-
     public:
         static ArchPinKey getArchPin(const ParsedEvent &ev) {
             using namespace Core::types::logs;
@@ -60,28 +50,28 @@ namespace NodeSystem::Visual {
             if (ev.logType == Registry::id<LogSensorOutEvent>) return {ev.devId, ArchCompType::Sensor, ev.index};
             if (ev.logType == Registry::id<LogRouterAccept>) return {ev.devId, ArchCompType::Router, 0};
             if (ev.logType == Registry::id<LogRouterSendInner>) return {ev.devId, ArchCompType::Router, 0};
-            if (ev.logType == Registry::id<LogWorkerAccept>) return {ev.devId, ArchCompType::Worker, ev.slot};
+            if (ev.logType == Registry::id<LogWorkerAccept>) return {ev.devId, ArchCompType::Worker, ev.worker};
             // slot = workerId
-            if (ev.logType == Registry::id<LogWorkerSend>) return {ev.devId, ArchCompType::Worker, ev.slot};
+            if (ev.logType == Registry::id<LogWorkerSend>) return {ev.devId, ArchCompType::Worker, ev.worker};
             if (ev.logType == Registry::id<LogRouterSendForward>) return {ev.devId, ArchCompType::TcpTx, 0};
             if (ev.logType == Registry::id<LogWorkerAccept> ||
                 ev.logType == Registry::id<LogWorkerSend> ||
                 ev.logType == Registry::id<LogNodeProcessed> ||
                 ev.logType == Registry::id<LogNodeInputFilled>) {
-                int workerId = (ev.slot >= 0) ? ev.slot : 0;
+                int workerId = (ev.worker >= 0) ? ev.worker : 0;
                 return {ev.devId, ArchCompType::Worker, workerId};
             }
             return {0, ArchCompType::None, 0};
         }
 
-        static void parseAndExecute(const std::vector<std::string> &filenames, GraphCanvas &canvas,
+        static void parseAndExecute(const std::vector<std::filesystem::path> &filenames, GraphCanvas &canvas,
                                     ArchitectureCanvas &archCanvas) {
             std::vector<ParsedEvent> allEvents;
             std::map<std::pair<int, uint32_t>, int> machineToLogicalId;
             for (int fileIndex = 0; fileIndex < filenames.size(); ++fileIndex) {
                 std::ifstream in(filenames[fileIndex], std::ios::binary);
                 if (!in) continue;
-                Core::ID currentDeviceId{0};
+                Core::types::ID currentDeviceId{0};
                 while (in.peek() != EOF) {
                     Core::types::Byte logType;
                     in.read(reinterpret_cast<char *>(&logType), 1);
@@ -93,7 +83,7 @@ namespace NodeSystem::Visual {
                     switch (logType) {
                         case Registry::id<LogSetDeviceId>: {
                             Registry::LogRecord<LogSetDeviceId> r;
-                            in.read((char *) &r, sizeof(r));
+                            if (!in.read(reinterpret_cast<char*>(&r), sizeof(r))) break;
                             machineToLogicalId[{fileIndex, r.header.eventId.deviceId}] = r.data.deviceId;
                             allEvents.push_back({
                                 r.header, r.timeStamp, logType, [d=r.data](GraphCanvas &c) {
@@ -110,7 +100,7 @@ namespace NodeSystem::Visual {
                         }
                         case Registry::id<LogSetWorkers>: {
                             Registry::LogRecord<LogSetWorkers> r;
-                            in.read((char *) &r, sizeof(r));
+                            if (!in.read(reinterpret_cast<char*>(&r), sizeof(r))) break;
                             allEvents.push_back({
                                 r.header, r.timeStamp, logType,
                                 [d=r.data, physDev=r.header.eventId.deviceId, fileIndex, &machineToLogicalId
@@ -126,17 +116,17 @@ namespace NodeSystem::Visual {
                         }
                         case Registry::id<LogSetIp>: {
                             Registry::LogRecord<LogSetIp> r;
-                            in.read((char *) &r, sizeof(r));
+                            if (!in.read(reinterpret_cast<char*>(&r), sizeof(r))) break;
                             break;
                         }
                         case Registry::id<LogRun>: {
                             Registry::LogRecord<LogRun> r;
-                            in.read((char *) &r, sizeof(r));
+                            if (!in.read(reinterpret_cast<char*>(&r), sizeof(r))) break;
                             break;
                         }
                         case Registry::id<LogCreateSensor>: {
                             Registry::LogRecord<LogCreateSensor> r;
-                            in.read((char *) &r, sizeof(r));
+                            if (!in.read(reinterpret_cast<char*>(&r), sizeof(r))) break;
                             allEvents.push_back({
                                 r.header, r.timeStamp, logType, [d=r.data](GraphCanvas &c) {
                                     for (auto &dev: c.devices) {
@@ -163,7 +153,7 @@ namespace NodeSystem::Visual {
                         }
                         case Registry::id<LogCreateNode>: {
                             Registry::LogRecord<LogCreateNode> r;
-                            in.read((char *) &r, sizeof(r));
+                            if (!in.read(reinterpret_cast<char*>(&r), sizeof(r))) break;
                             allEvents.push_back({
                                 r.header, r.timeStamp, logType, [d=r.data](GraphCanvas &c) {
                                     for (auto &dev: c.devices) {
@@ -178,10 +168,10 @@ namespace NodeSystem::Visual {
                                                     break;
                                                 }
                                             if (!exists) {
-                                                auto *n = new Core::Nodes(
-                                                    Core::types::NodeId{d.id_lvl, d.id_val}, d.inputs_count);
-                                                n->algoType = d.algo;
-                                                n->output.output = d.output;
+                                                auto *n = new Core::Nodes::Node(Core::Nodes::NodeCreateInfo{
+                                                     .id = {d.id_lvl, d.id_val}, .algoType = d.algo,
+                                                     .output = d.output, .inputs_count = d.inputs_count
+                                                 });
                                                 dev.blocks.push_back(new VisualNode(d.device, n, {0, 0}));
                                             }
                                         }
@@ -192,7 +182,7 @@ namespace NodeSystem::Visual {
                         }
                         case Registry::id<LogNodeAddInput>: {
                             Registry::LogRecord<LogNodeAddInput> r;
-                            in.read((char *) &r, sizeof(r));
+                            if (!in.read(reinterpret_cast<char*>(&r), sizeof(r))) break;
                             allEvents.push_back({
                                 r.header, r.timeStamp, logType, [d=r.data](GraphCanvas &c) {
                                     for (auto &dev: c.devices) {
@@ -202,8 +192,7 @@ namespace NodeSystem::Visual {
                                                     && b->getLevel() == d.id_lvl) {
                                                     auto *vNode = static_cast<VisualNode *>(b);
                                                     if (d.input_index < vNode->coreNode->inputs.size())
-                                                        vNode->coreNode
-                                                                ->addInput(d.input_data, d.input_index);
+                                                        vNode->coreNode->addInput({d.input_index, d.input_data});
                                                 }
                                             }
                                         }
@@ -214,7 +203,7 @@ namespace NodeSystem::Visual {
                         }
                         case Registry::id<LogDoubleBind>: {
                             Registry::LogRecord<LogDoubleBind> r;
-                            in.read((char *) &r, sizeof(r));
+                            if (!in.read(reinterpret_cast<char*>(&r), sizeof(r))) break;
                             allEvents.push_back({
                                 r.header, r.timeStamp, logType, [d=r.data, tr=r.header.traceId](GraphCanvas &c) {
                                     uint64_t tk = ((uint64_t) tr.deviceId << 32) | tr.localEventId;
@@ -228,7 +217,7 @@ namespace NodeSystem::Visual {
                         }
                         case Registry::id<LogSingleBind>: {
                             Registry::LogRecord<LogSingleBind> r;
-                            in.read((char *) &r, sizeof(r));
+                            if (!in.read(reinterpret_cast<char*>(&r), sizeof(r))) break;
                             allEvents.push_back({
                                 r.header, r.timeStamp, logType, [d=r.data, tr=r.header.traceId](GraphCanvas &c) {
                                     uint64_t tk = ((uint64_t) tr.deviceId << 32) | tr.localEventId;
@@ -245,21 +234,21 @@ namespace NodeSystem::Visual {
 
                         case Registry::id<LogSensorOutEvent>: {
                             Registry::LogRecord<LogSensorOutEvent> r;
-                            in.read((char *) &r, sizeof(r));
+                            if (!in.read(reinterpret_cast<char*>(&r), sizeof(r))) break;
                             ParsedEvent ev{};
                             ev.header = r.header;
                             ev.timeStamp = r.timeStamp;
                             ev.logType = logType;
                             ev.devId = (int) r.header.eventId.deviceId;
                             ev.level = 0;
-                            ev.index = (int) r.data.result.from.index;
-                            ev.data = r.data.result.data;
+                            ev.index = (int) r.data.result.nodeId.index;
+                            ev.data = {.alpha = r.data.result.alpha, .theta = 0};
                             allEvents.push_back(ev);
                             break;
                         }
                         case Registry::id<LogWorkerAccept>: {
                             Registry::LogRecord<LogWorkerAccept> r;
-                            in.read((char *) &r, sizeof(r));
+                            if (!in.read(reinterpret_cast<char*>(&r), sizeof(r))) break;
                             ParsedEvent ev{};
                             ev.header = r.header;
                             ev.timeStamp = r.timeStamp;
@@ -268,62 +257,81 @@ namespace NodeSystem::Visual {
                             ev.level = (int) r.data.message.nodeId.level;
                             ev.index = (int) r.data.message.nodeId.index;
                             ev.slot = (int) r.data.message.slotId;
-                            ev.data = r.data.message.data;
+                            ev.data = {.alpha = r.data.message.alpha, .theta = 0};
+                             ev.worker = r.data.workerId;
                             allEvents.push_back(ev);
                             break;
                         }
 
                         case Registry::id<LogWorkerSend>: {
                             Registry::LogRecord<LogWorkerSend> r;
-                            in.read((char *) &r, sizeof(r));
-                            allEvents.push_back({r.header, r.timeStamp, logType});
+                            if (!in.read(reinterpret_cast<char*>(&r), sizeof(r))) break;
+                            ParsedEvent ev{r.header, r.timeStamp, logType};
+                             ev.devId = static_cast<int>(r.header.eventId.deviceId);
+                             ev.worker = r.data.workerId;
+                             ev.slot = r.data.workerId;
+                             ev.level = r.data.result.nodeId.level;
+                             ev.index = r.data.result.nodeId.index;
+                             ev.data = {.alpha = r.data.result.alpha, .theta = 0};
+                             allEvents.push_back(ev);
                             break;
                         }
                         case Registry::id<LogRouterAccept>: {
                             Registry::LogRecord<LogRouterAccept> r;
-                            in.read((char *) &r, sizeof(r));
+                            if (!in.read(reinterpret_cast<char*>(&r), sizeof(r))) break;
                             allEvents.push_back({r.header, r.timeStamp, logType});
                             break;
                         }
                         case Registry::id<LogRouterSendInner>: {
                             Registry::LogRecord<LogRouterSendInner> r;
-                            in.read((char *) &r, sizeof(r));
+                            if (!in.read(reinterpret_cast<char*>(&r), sizeof(r))) break;
                             allEvents.push_back({r.header, r.timeStamp, logType});
                             break;
                         }
                         case Registry::id<LogRouterSendForward>: {
                             Registry::LogRecord<LogRouterSendForward> r;
-                            in.read((char *) &r, sizeof(r));
+                            if (!in.read(reinterpret_cast<char*>(&r), sizeof(r))) break;
                             allEvents.push_back({r.header, r.timeStamp, logType});
                             break;
                         }
                         case Registry::id<LogNodeInputFilled>: {
                             Registry::LogRecord<LogNodeInputFilled> r;
-                            in.read((char *) &r, sizeof(r));
-                            allEvents.push_back({r.header, r.timeStamp, logType});
+                            if (!in.read(reinterpret_cast<char*>(&r), sizeof(r))) break;
+                            ParsedEvent ev{r.header, r.timeStamp, logType};
+                            ev.devId = static_cast<int>(r.header.eventId.deviceId);
+                            ev.level = static_cast<int>(r.data.nodeId.level);
+                            ev.index = static_cast<int>(r.data.nodeId.index);
+                            ev.slot = static_cast<int>(r.data.slotId);
+                            ev.data = r.data.data;
+                            allEvents.push_back(ev);
                             break;
                         }
                         case Registry::id<LogNodeProcessed>: {
                             Registry::LogRecord<LogNodeProcessed> r;
-                            in.read((char *) &r, sizeof(r));
-                            allEvents.push_back({r.header, r.timeStamp, logType});
+                            if (!in.read(reinterpret_cast<char*>(&r), sizeof(r))) break;
+                            ParsedEvent ev{r.header, r.timeStamp, logType};
+                            ev.devId = static_cast<int>(r.header.eventId.deviceId);
+                            ev.level = static_cast<int>(r.data.nodeId.level);
+                            ev.index = static_cast<int>(r.data.nodeId.index);
+                            ev.data = {.alpha = r.data.result, .theta = 0};
+                            allEvents.push_back(ev);
                             break;
                         }
                         case Registry::id<LogNodeDenied>: {
                             Registry::LogRecord<LogNodeDenied> r;
-                            in.read((char *) &r, sizeof(r));
+                            if (!in.read(reinterpret_cast<char*>(&r), sizeof(r))) break;
                             allEvents.push_back({r.header, r.timeStamp, logType});
                             break;
                         }
                         case Registry::id<LogReceivedTcpCommand>: {
                             Registry::LogRecord<LogReceivedTcpCommand> r;
-                            in.read((char *) &r, sizeof(r));
+                            if (!in.read(reinterpret_cast<char*>(&r), sizeof(r))) break;
                             allEvents.push_back({r.header, r.timeStamp, logType});
                             break;
                         }
                         case Registry::id<LogSendTcpCommand>: {
                             Registry::LogRecord<LogSendTcpCommand> r;
-                            in.read((char *) &r, sizeof(r));
+                            if (!in.read(reinterpret_cast<char*>(&r), sizeof(r))) break;
                             allEvents.push_back({r.header, r.timeStamp, logType});
                             break;
                         }
@@ -337,7 +345,7 @@ namespace NodeSystem::Visual {
                 }
             }
 
-            std::sort(allEvents.begin(), allEvents.end(), [](const ParsedEvent &a, const ParsedEvent &b) {
+            std::stable_sort(allEvents.begin(), allEvents.end(), [](const ParsedEvent &a, const ParsedEvent &b) {
                 return a.timeStamp < b.timeStamp;
             });
             for (auto &ev: allEvents) if (ev.applyToCanvas) ev.applyToCanvas(canvas);
@@ -355,6 +363,31 @@ namespace NodeSystem::Visual {
             // Це вирішує "часовий парадокс" розсинхронізованих годинників
             for (auto &ev: allEvents) {
                 ptrMap[makeKey(ev.header.eventId)] = &ev;
+            }
+
+            // Derive payloads from the actual work recorded by the worker.
+            // The rendered flight leaves a WorkerAccept checkpoint, but its output
+            // alpha comes from the descendant WorkerSend, not the inbound packet.
+            for (const auto& ev : allEvents) {
+                if (ev.logType == Core::LogRecordList::id<Core::types::logs::LogNodeInputFilled>) {
+                    const auto it = ptrMap.find(makeKey(ev.header.parentId));
+                    if (it != ptrMap.end() &&
+                        it->second->logType == Core::LogRecordList::id<Core::types::logs::LogWorkerAccept>) {
+                        it->second->data.theta = ev.data.theta;
+                    }
+                }
+                if (ev.logType == Core::LogRecordList::id<Core::types::logs::LogWorkerSend>) {
+                    auto ancestor = ev.header.parentId;
+                    for (int depth = 0; depth < 8 && !ancestor.isNull(); ++depth) {
+                        const auto it = ptrMap.find(makeKey(ancestor));
+                        if (it == ptrMap.end()) break;
+                        if (it->second->logType == Core::LogRecordList::id<Core::types::logs::LogWorkerAccept>) {
+                            it->second->data.alpha = ev.data.alpha;
+                            break;
+                        }
+                        ancestor = it->second->header.parentId;
+                    }
+                }
             }
 
             // ПРОХІД 2: Будуємо родинні зв'язки.
@@ -533,9 +566,9 @@ namespace NodeSystem::Visual {
                     if (parent->logType == Core::LogRecordList::id<Core::types::logs::LogSensorOutEvent>) {
                         startPin = {devA, ArchCompType::Sensor, parent->index};
                     } else {
-                        startPin = {devA, ArchCompType::Worker, parent->slot};
+                        startPin = {devA, ArchCompType::Worker, parent->worker};
                     }
-                    ArchPinKey endPin = {devB, ArchCompType::Worker, child->slot};
+                    ArchPinKey endPin = {devB, ArchCompType::Worker, child->worker};
 
                     if (devA == devB) {
                         // ЛОКАЛЬНИЙ МАРШРУТ (Dev A -> Dev A) - 4 відрізки

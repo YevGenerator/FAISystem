@@ -34,11 +34,20 @@ namespace NodeSystem::ZMCore::Queues::Policies {
         static void init(zmq::socket_t &socket, zmq::context_t &context) {
             socket = zmq::socket_t{context, zmq::socket_type::pull};
             socket.bind(Address);
+            socket.set(zmq::sockopt::rcvtimeo, 100);
         }
     };
 
     template<FixedString Address>
     struct ConnectPushPolicy {
+        static void init(zmq::socket_t &socket, zmq::context_t &context) {
+            socket = zmq::socket_t{context, zmq::socket_type::push};
+            socket.connect(Address);
+        }
+    };
+
+    template<FixedString Address>
+    struct BindPushPolicy {
         static void init(zmq::socket_t &socket, zmq::context_t &context) {
             socket = zmq::socket_t{context, zmq::socket_type::push};
             socket.bind(Address);

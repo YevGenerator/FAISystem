@@ -6,6 +6,7 @@
 #include "commands/CommandList.hpp"
 #include "commands/NetworkPacket.hpp"
 #include "types/overload.hpp"
+#include "logger/Logger.hpp"
 
 namespace NodeSystem::ZMCore {
     using namespace Core::Commands;
@@ -16,6 +17,7 @@ namespace NodeSystem::ZMCore {
 
     public:
         CmdProcessorContext<IsServer> context;
+        bool bootstrapComplete = false;
 
         void init(CmdProcessorContext<IsServer> cmdContext) {
             this->context = cmdContext;
@@ -38,22 +40,25 @@ namespace NodeSystem::ZMCore {
         }
 
         void process(const NetworkPacket<CmdDevice> &cmd) {
-            context.deviceConfig->deviceId = cmd.data.deviceId;
-            //LoggerBin.log(logs::LogSetDeviceId{cmd.deviceId}, header);
+            const auto id = context.deviceOverride.value_or(cmd.data.deviceId);
+            context.deviceConfig->deviceId = id;
+            Core::LoggerBin.setDeviceId(id);
+            Core::LoggerBin.log(Core::types::logs::LogSetDeviceId{id}, event(cmd.eventHeader));
         }
 
         void process(const NetworkPacket<CmdWorkers> &cmd) {
             context.workerMaster->initWorkers(cmd.data.workerAmount);
-            //LoggerBin.log(logs::LogSetWorkers{cmd.workerAmount}, header);
+            Core::LoggerBin.log(Core::types::logs::LogSetWorkers{cmd.data.workerAmount}, event(cmd.eventHeader));
         }
 
         void process(const NetworkPacket<CmdRun> &cmd) {
-            if constexpr (IsServer) {
-                if (cmd.data.device != context.deviceConfig->deviceId) {
-                    context.tcpQueue->push(cmd.data.device, cmd);
-                    return;
+            if (cmd.data.device != context.deviceConfig->deviceId) {
+                if constexpr (IsServer) {
+                    if (bootstrapComplete) context.tcpQueue->push(cmd.data.device, cmd);
                 }
+                return;
             }
+            Core::LoggerBin.log(Core::types::logs::LogRun{cmd.data.device, cmd.data.toRun, false}, event(cmd.eventHeader));
             context.run(cmd.data.toRun);
         }
 
@@ -61,6 +66,7 @@ namespace NodeSystem::ZMCore {
             context.deviceConfig->serverAddress.host = cmd.data.host;
             context.deviceConfig->serverAddress.port = cmd.data.port;
             context.need_reconnect->store(true, std::memory_order_relaxed);
+            Core::LoggerBin.log(Core::types::logs::LogSetIp{cmd.data}, event(cmd.eventHeader));
         }
 
         void process(const NetworkPacket<CmdRead> &cmd) {
@@ -76,93 +82,119 @@ namespace NodeSystem::ZMCore {
         }
 
         void process(const NetworkPacket<CmdSensorCreate> &cmd) {
-            if constexpr (IsServer) {
-                if (cmd.data.device != context.deviceConfig->deviceId) {
-                    context.tcpQueue->push(cmd.data.device, cmd);
-                    return;
+            if (cmd.data.device != context.deviceConfig->deviceId) {
+                if constexpr (IsServer) {
+                    if (bootstrapComplete) context.tcpQueue->push(cmd.data.device, cmd);
                 }
+                return;
             }
-            context.sensors->sensors.add( cmd.data.id, cmd.data.pin_index);
+            context.sensors->sensors.add(cmd.data.id, cmd.data.pin_index);
+            Core::LoggerBin.log(Core::types::logs::LogCreateSensor{.device=cmd.data.device, .id_val=cmd.data.id}, event(cmd.eventHeader));
         }
 
         void process(const NetworkPacket<CmdNodeCreate> &cmd) {
-            if constexpr (IsServer) {
-                if (cmd.data.device != context.deviceConfig->deviceId) {
-                    context.tcpQueue->push(cmd.data.device, cmd);
-                    return;
+            if (cmd.data.device != context.deviceConfig->deviceId) {
+                if constexpr (IsServer) {
+                    if (bootstrapComplete) context.tcpQueue->push(cmd.data.device, cmd);
                 }
+                return;
             }
             context.nodeTable->createAndAddNode(cmd.data.toNodeCreateInfo());
+            Core::LoggerBin.log(Core::types::logs::LogCreateNode{
+                .device=cmd.data.device, .id_lvl=cmd.data.id_lvl, .id_val=cmd.data.id_val,
+                .algo=cmd.data.algo, .output={cmd.data.output_c, cmd.data.output_a},
+                .inputs_count=cmd.data.inputs_count
+            }, event(cmd.eventHeader));
         }
 
         void process(const NetworkPacket<CmdNodeAddInput> &cmd) {
-            if constexpr (IsServer) {
-                if (cmd.data.device != context.deviceConfig->deviceId) {
-                    context.tcpQueue->push(cmd.data.device, cmd);
-                    return;
+            if (cmd.data.device != context.deviceConfig->deviceId) {
+                if constexpr (IsServer) {
+                    if (bootstrapComplete) context.tcpQueue->push(cmd.data.device, cmd);
                 }
+                return;
             }
             context.nodeTable->addInputToNode({cmd.data.id_lvl, cmd.data.id_val}, cmd.data.input_data,
                                              cmd.data.input_index);
+            Core::LoggerBin.log(Core::types::logs::LogNodeAddInput{
+                .device=cmd.data.device, .id_lvl=cmd.data.id_lvl, .id_val=cmd.data.id_val,
+                .input_index=cmd.data.input_index, .input_data=cmd.data.input_data
+            }, event(cmd.eventHeader));
         }
 
         void process(const NetworkPacket<CmdBindSingle> &cmd) {
-            if constexpr (IsServer) {
-                if (cmd.data.from.device != context.deviceConfig->deviceId) {
-                    context.tcpQueue->push(cmd.data.from.device, cmd);
-                    return;
-                }
-                if (cmd.data.deviceTo != context.deviceConfig->deviceId) {
-                    context.routeTable->add_address({cmd.data.from.id_lvl, cmd.data.from.id_val},
-                                                   Core::Nodes::ExternalAddress{cmd.data.deviceTo});
-                    return;
-                }
+            const auto id = context.deviceConfig->deviceId;
+            const bool fromLocal = cmd.data.from.device == id;
+            // Every host reads the same configuration; never forward during bootstrap.
+            if (fromLocal || (IsServer && cmd.data.deviceTo != id)) {
+                context.routeTable->add_address({cmd.data.from.id_lvl, cmd.data.from.id_val},
+                                               Core::Nodes::ExternalAddress{cmd.data.deviceTo});
+                Core::LoggerBin.log(Core::types::logs::LogSingleBind{
+                    cmd.data.from, cmd.data.deviceTo, false
+                }, event(cmd.eventHeader));
             }
-            context.routeTable->add_address({cmd.data.from.id_lvl, cmd.data.from.id_val},
-                                           Core::Nodes::ExternalAddress{});
+            if constexpr (IsServer) {
+                if (bootstrapComplete && !fromLocal) context.tcpQueue->push(cmd.data.from.device, cmd);
+            }
         }
 
         void process(const NetworkPacket<CmdBindDouble> &cmd) {
-            if constexpr (IsServer) {
-                if (cmd.data.from.device != context.deviceConfig->deviceId) {
-                    if (cmd.data.to.device == cmd.data.from.device) {
-                        context.tcpQueue->push(cmd.data.from.device, cmd);
-                        return;
-                    }
-                    if (cmd.data.to.device == context.deviceConfig->deviceId) {
-                        const auto singleCmd = CmdBindSingle{.from = cmd.data.from};
-                        context.tcpQueue->push(cmd.data.from.device,
-                                              CommandList::CreatePacket(singleCmd, cmd.eventHeader));
-                    } else {
-                        const auto singleCmd = CmdBindSingle{.from = cmd.data.from};
-                        context.tcpQueue->push(cmd.data.from.device,
-                                              CommandList::CreatePacket(singleCmd, cmd.eventHeader));
-                        context.routeTable->add_address({cmd.data.from.id_lvl, cmd.data.from.id_val},
-                                                       Core::Nodes::ExternalAddress{cmd.data.to.device});
-
-                        context.tcpQueue->push(cmd.data.to.device, cmd);
-                        return;
-                    }
-                } else {
-                    if (cmd.data.to.device != context.deviceConfig->deviceId) {
-                        context.routeTable->add_address({cmd.data.from.id_lvl, cmd.data.from.id_val},
-                                                       Core::Nodes::ExternalAddress{cmd.data.to.device});
-                        context.tcpQueue->push(cmd.data.to.device, cmd);
-                        return;
-                    }
+            const auto id = context.deviceConfig->deviceId;
+            const bool fromLocal = cmd.data.from.device == id;
+            const bool toLocal = cmd.data.to.device == id;
+            const Core::Nodes::NodeId source{cmd.data.from.id_lvl, cmd.data.from.id_val};
+            const Core::Nodes::InternalAddress target{
+                .targetNodeId = {cmd.data.to.id_lvl, cmd.data.to.id_val},
+                .slotId = cmd.data.to.in_index
+            };
+            bool added = false;
+            if (fromLocal && toLocal) {
+                context.routeTable->add_address(source, target);
+                added = true;
+            } else if (fromLocal && !toLocal) {
+                context.routeTable->add_address(source, Core::Nodes::ExternalAddress{cmd.data.to.device});
+                added = true;
+            } else if (!fromLocal && toLocal) {
+                context.routeTable->add_address(source, target);
+                added = true;
+            } else if constexpr (IsServer) {
+                // Central server bridges traffic between two remote devices.
+                if (cmd.data.from.device != cmd.data.to.device) {
+                    context.routeTable->add_address(source, Core::Nodes::ExternalAddress{cmd.data.to.device});
+                    added = true;
                 }
             }
-            context.routeTable->add_address({cmd.data.from.id_lvl, cmd.data.from.id_val},
-                                           Core::Nodes::InternalAddress{
-                                               .targetNodeId = {
-                                                   .level = cmd.data.to.id_lvl, .index = cmd.data.to.id_val,
-                                               },
-                                               .slotId = cmd.data.to.in_index,
-                                           });
-            //LoggerBin.log(logs::LogDoubleBind{cmd.from, cmd.to, false}, header);
+            if (added) {
+                Core::LoggerBin.log(Core::types::logs::LogDoubleBind{
+                    cmd.data.from, cmd.data.to, false
+                }, event(cmd.eventHeader));
+            }
+            if constexpr (IsServer) {
+                if (bootstrapComplete) {
+                    if (!fromLocal)
+                        context.tcpQueue->push(cmd.data.from.device, cmd);
+                    if (!toLocal && cmd.data.to.device != cmd.data.from.device)
+                        context.tcpQueue->push(cmd.data.to.device, cmd);
+                }
+            }
         }
-        void process(const NodeTransportPacket &) {
-            // Транзитний мережевий пакет не вимагає локальних дій у процесорі
+
+        void process(const NodeTransportPacket &packet) {
+            if constexpr (IsServer) {
+                if (packet.data.deviceId != context.deviceConfig->deviceId) {
+                    context.tcpQueue->push(packet.data.deviceId, packet);
+                    return;
+                }
+            }
+            const Core::Nodes::NodeResultMessage message{
+                .nodeId = packet.data.nodeId, .alpha = packet.data.alpha
+            };
+            context.routerQueue->push(CommandList::CreatePacket(message, packet.eventHeader));
+        }
+
+    private:
+        static auto event(const Core::Events::EventHeader& parent) {
+            return Core::LoggerBin.newEvent(parent);
         }
     };
 } // namespace NodeSystem::ZMCore

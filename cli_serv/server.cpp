@@ -1,4 +1,7 @@
 #include <iostream>
+#include <filesystem>
+#include <string>
+#include "logger/Logger.hpp"
 #include <zmq.hpp>
 #include "Timer.hpp"
 #include "ZMCore/WorkerPool.hpp"
@@ -14,6 +17,17 @@ using namespace NodeSystem;
 int main(int argc, char* argv[]) {
     auto options = Serv::CliParser::parse(argc, argv, true);
     Core::Timer::init();
+    std::filesystem::path logPath = options.logPath.value_or(std::filesystem::path("server.log.bin"));
+    if (!options.logPath) {
+        for (unsigned i = 1; std::filesystem::exists(logPath); ++i)
+            logPath = std::filesystem::path("server-" + std::to_string(i) + ".log.bin");
+    }
+    try { Core::LoggerBin.open(logPath); }
+    catch (const std::exception& e) {
+        std::cerr << "[Log] " << e.what() << "\n";
+        return 1;
+    }
+    if (options.deviceIdOverride) Core::LoggerBin.setDeviceId(*options.deviceIdOverride);
 
     zmq::context_t zmqContext{1};
 
@@ -27,6 +41,7 @@ int main(int argc, char* argv[]) {
     }
 
     ZMCore::CmdProcessorContext<true> cmdContext{
+        .deviceOverride = options.deviceIdOverride,
         .workerMaster = &workerPool,
         .run = ZMCore::RunDelegate::create<&ZMCore::WorkerPool::run>(&workerPool),
         .sensors = &sensors.sensors,
@@ -46,9 +61,12 @@ int main(int argc, char* argv[]) {
     ZMCore::ThreadRunner<ZMCore::ZMBus<true>&> busThread(bus);
     ZMCore::ThreadRunner<ZMCore::ZMSensors&> sensorsThread(sensors);
 
+    bus.processor.bootstrapComplete = true;
     routerThread.launch();
     busThread.launch();
     sensorsThread.launch();
+    workerPool.activate();
+    std::cout << "[Log] Writing " << logPath << "\n";
 
     std::cout << "[Server] Running. Press Enter to shutdown...\n";
     std::cin.get();

@@ -49,6 +49,7 @@ namespace NodeSystem::Core::Commands {
         template<typename P>
         static auto readMessageFile(const char *&buffer, std::size_t &available) -> Variant {
             if (available < sizeof(P)) {
+                available = 0;
                 return std::monostate{};
             }
 
@@ -62,7 +63,10 @@ namespace NodeSystem::Core::Commands {
 
         static constexpr auto handlersNetwork() {
             return std::array{&readMessageNetwork<T>...};
-        };
+        }
+        static constexpr auto networkPacketSizes() {
+            return std::array<std::size_t, sizeof...(T)>{sizeof(NetworkPacket<T>)...};
+        }
 
         static constexpr auto handlersFile() {
             return std::array{&readMessageFile<T>...};
