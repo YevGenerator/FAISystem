@@ -30,6 +30,7 @@ namespace NodeSystem::strings::convert
     };
 
     using IdConverter = NumberConverter<dto::Id>;
+    using WorkerConverter = NumberConverter<dto::WorkerInt>;
 
     static_assert(IsStringConverter<NumberConverter<>>);
     static_assert(IsStringConverter<IdConverter>);

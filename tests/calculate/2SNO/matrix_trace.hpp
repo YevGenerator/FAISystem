@@ -9,7 +9,8 @@ namespace NodeSystem::Testing::Calculate::twoSNO {
     struct SlotStateSnapshot {
         double alpha{0.0};
         std::uint64_t theta{0};
-        std::optional<double> beta;
+        std::optional<std::int64_t> beta;
+        std::optional<double> beta_norm;
         std::optional<double> cf;
         std::optional<double> k_beta;
         std::optional<double> ro;
@@ -42,8 +43,9 @@ namespace NodeSystem::Testing::Calculate::twoSNO {
         std::vector<std::string> m_headers;
         std::vector<TimeStepSnapshot> m_steps;
 
-        static std::string fmt(const std::optional<double>& val) {
-            return val.has_value() ? std::format("{:.2f}", *val) : "";
+        static std::string fmt(const std::optional<double>& val, int prec = 2) {
+            if (!val.has_value()) return "";
+            return std::format("{:.{}f}", *val, prec);
         }
 
         static std::string fmt(const std::optional<std::uint64_t>& val) {
@@ -77,13 +79,18 @@ namespace NodeSystem::Testing::Calculate::twoSNO {
             for (std::size_t s = 0; s < num_slots; ++s) {
                 const std::string phase_name = std::format("In_{}", s + 1);
                 add_row("IMKG", phase_name, "alpha", [s](const TimeStepSnapshot& st) {
-                    return s < st.slots.size() ? fmt(static_cast<std::optional<double>>(st.slots[s].alpha)) : "";
+                    return s < st.slots.size() ? fmt(static_cast<const std::optional<double>>(st.slots[s].alpha)) : "";
                 });
                 add_row("IMKG", phase_name, "theta", [s](const TimeStepSnapshot& st) {
                     return s < st.slots.size() ? std::to_string(st.slots[s].theta) : "";
                 });
                 add_row("IMKG", phase_name, "beta", [s](const TimeStepSnapshot& st) {
-                    return s < st.slots.size() ? fmt(st.slots[s].beta) : "";
+                    return (s < st.slots.size() && st.slots[s].beta.has_value())
+                        ? std::to_string(*st.slots[s].beta)
+                        : "";
+                });
+                add_row("IMKG", phase_name, "beta_norm", [s](const TimeStepSnapshot& st) {
+                    return s < st.slots.size() ? fmt(st.slots[s].beta_norm, 4) : "";
                 });
                 add_row("IMKG", phase_name, "cf", [s](const TimeStepSnapshot& st) {
                     return s < st.slots.size() ? fmt(st.slots[s].cf) : "";
@@ -107,11 +114,11 @@ namespace NodeSystem::Testing::Calculate::twoSNO {
             add_row("2SNS", "Step 2", "Switch",    [](const TimeStepSnapshot& st) { return std::to_string(st.to_switch); });
 
             add_row("2SNS O", "Step 4", "alpha_Out", [](const TimeStepSnapshot& st) {
-                return (st.time_header == "0/10000" || !st.alpha_out.has_value()) ? "" : fmt(st.alpha_out);
+                return (st.time_header.starts_with("0/") || !st.alpha_out.has_value()) ? "" : fmt(st.alpha_out);
             });
             add_row("2SNS O", "Step 4", "t", [](const TimeStepSnapshot& st) { return fmt(st.t_out); });
             add_row("2SNS O", "Step 4", "message", [](const TimeStepSnapshot& st) {
-                return st.time_header == "0/10000" ? "" : st.message;
+                return st.time_header.starts_with("0/") ? "" : st.message;
             });
 
             return rows;

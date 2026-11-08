@@ -59,7 +59,7 @@ namespace NodeSystem::Testing::Calculate::twoSNO {
             constexpr int W_Algr = 8;
             constexpr int W_Phase = 8;
             constexpr int W_Var = 11;
-            constexpr int W_Col = 10;
+            constexpr int W_Col = 12;
 
             auto print_sep = [&]() {
                 out << "+" << std::string(W_Algr + 2, '-')

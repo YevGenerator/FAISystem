@@ -20,22 +20,21 @@ add_executable(RPVisualizer main.cpp
         SelectionType.hpp
         LogParser.hpp
         colors_map.hpp
-        color_key.hpp
         float_names.hpp
         floats_map.hpp
         SettingsPanel.hpp
         VisualArchDevice.hpp
         ArchTypes.hpp
         ArchitectureCanvas.hpp
+        ../core/main.cpp
 )
-
-target_include_directories(RPVisualizer PRIVATE ../coreі)
 
 target_link_libraries(RPVisualizer PRIVATE
         imgui::imgui
         glfw
         OpenGL::GL
         RP_Core_Strings
+        Fai_ui_core
 )
 
 add_definitions(-DIMGUI_DEFINE_MATH_OPERATORS)

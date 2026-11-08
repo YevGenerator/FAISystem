@@ -13,6 +13,7 @@ namespace NodeSystem::strings
 {
     using ParsedCommand = std::variant<
         convert::IdConverter::target_t,
+        convert::WorkerConverter::target_t,
         convert::KgNodeConverter::target_t,
         convert::KgIpConverter::target_t,
         convert::KgSensorConverter::target_t,
@@ -48,6 +49,7 @@ namespace NodeSystem::strings
 
         using CmdRules = std::tuple<
             Route<Keywords::Cmd::Device, convert::IdConverter>,
+            Route<Keywords::Cmd::Workers, convert::WorkerConverter>,
             Route<Keywords::Cmd::Node, convert::KgNodeConverter>,
             Route<Keywords::Cmd::Ip, convert::KgIpConverter>,
             Route<Keywords::Cmd::Sensor, convert::KgSensorConverter>,

@@ -18,7 +18,7 @@ The repository follows the next layer separation:
 | [`ZMCore/`](./ZMCore) | Distributed networking runtime: ZeroMQ message bus (`ZMBus`), worker thread pools, and routing dispatcher (`ZMRouter`). | `Core`, `cppzmq` |
 | [`build_compiler/`](./build_compiler) | Standalone CLI tools: configuration compiler (`rpcompiler`) and decompiler (`rpdecompiler`). | `Core`, `strings` |
 | [`cli_serv/`](./cli_serv) | Host runtime executables: server and clients (`servant`) applications. | `Core`, `ZMCore` |
-| [`visualizer/`](./visualizer) | Monitoring UI for inspection of the system's work via binary log deserialization. | `Core`, `imgui` |
+| [`ui/visualizer`](ui/visualizer) | Monitoring UI for inspection of the system's work via binary log deserialization. | `Core`, `imgui` |
 | [`lsp_server/`](./lsp_server) | Language Server Protocol (LSP) daemon for real-time diagnostics and syntax highlighting for IDEs. | `Core`, `strings`, `nlohmann_json` |
 
 ---

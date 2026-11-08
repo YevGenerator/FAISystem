@@ -23,6 +23,11 @@ namespace NodeSystem::Compiler
             write(Core::Commands::CmdDevice{.deviceId = deviceId});
         }
 
+        void operator()(const strings::dto::WorkerInt& workers) const
+        {
+            write(Core::Commands::CmdWorkers{.workerAmount = workers});
+        }
+
         void operator()(const strings::dto::KgIp& ip) const
         {
             write(Core::Commands::CmdIp{ip});

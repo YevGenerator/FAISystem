@@ -33,7 +33,6 @@ add_library(RP_Core INTERFACE
         commands/NetworkPacket.hpp
         nodes/NodeInfo.hpp
         nodes/Worker.hpp
-        __temp/to_remove.cpp
         algos/2SNO/predefined.hpp
         algos/types.hpp
         algos/2SNO/steps/evaluate_time.hpp

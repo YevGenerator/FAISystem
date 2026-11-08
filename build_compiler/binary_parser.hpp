@@ -102,6 +102,11 @@ namespace NodeSystem::Compiler
                 return strings::dto::Id{cmd.deviceId};
             }
 
+            std::optional<strings::ParsedCommand> operator()(const Core::Commands::CmdWorkers& cmd) const
+            {
+                return strings::dto::WorkerInt{cmd.workerAmount};
+            }
+
             std::optional<strings::ParsedCommand> operator()(const Core::Commands::CmdIp& cmd) const
             {
                 const Core::Commands::KgIP ip{.host = cmd.host, .port = cmd.port};

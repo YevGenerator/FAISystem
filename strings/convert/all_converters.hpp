@@ -82,6 +82,7 @@ namespace NodeSystem::strings::convert
     static_assert(ConvertersRegistry::Exists<dto::NodeId>);
     static_assert(ConvertersRegistry::Exists<dto::Bool>);
     static_assert(ConvertersRegistry::Exists<dto::AlgoType>);
+    static_assert(ConvertersRegistry::Exists<dto::WorkerInt>);
     static_assert(ConvertersRegistry::Exists<dto::KgRun>);
     static_assert(ConvertersRegistry::Exists<dto::KgIp>);
     static_assert(ConvertersRegistry::Exists<dto::KgInput>);

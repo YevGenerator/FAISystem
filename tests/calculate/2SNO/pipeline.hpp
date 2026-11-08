@@ -1,4 +1,5 @@
 #pragma once
+#include <chrono>
 #include <vector>
 #include <string>
 #include <format>
@@ -11,42 +12,14 @@
 namespace NodeSystem::Testing::Calculate::twoSNO {
 
     class Simulation {
-        std::uint64_t m_base_time;
+        std::uint64_t m_base_time_us;
         bool m_node_state{false};
         Core::Nodes::KgOutput m_output;
         std::vector<Core::Nodes::InputDataSlot> m_slots;
         ProfessorMatrixBuilder m_matrix;
 
-    public:
-        explicit Simulation(std::uint64_t base_time = 10000,
-                            std::size_t slot_count = 3,
-                            double out_a = 0.84,
-                            double slot_a = 0.85,
-                            double slot_g = 0.39)
-            : m_base_time(base_time), m_output{.c = true, .a = out_a}
-        {
-            m_slots.resize(slot_count);
-            for (auto& s : m_slots) {
-                s.theta = base_time;
-                s.kgt.b = 0;
-                s.kgt.c = true;
-                s.kgt.a = slot_a;
-                s.kgt.g = slot_g;
-                s.alpha = 0.0;
-            }
-
-            TimeStepSnapshot step0;
-            step0.time_header = std::format("0/{}", base_time);
-            for (const auto& s : m_slots) {
-                step0.slots.push_back({.alpha = s.alpha, .theta = s.theta});
-            }
-            step0.st2 = "Dwn";
-            step0.to_switch = 0;
-            m_matrix.addStep(std::move(step0));
-        }
-
-        Simulation& step(std::size_t slot_id, double alpha, std::uint64_t offset_sec, std::uint64_t n = 1) {
-            const std::uint64_t current_time = m_base_time + offset_sec;
+        Simulation& step_impl(std::size_t slot_id, double alpha, std::uint64_t offset_us, std::uint64_t n) {
+            const std::uint64_t current_time = m_base_time_us + offset_us;
             m_slots[slot_id].alpha = alpha;
             m_slots[slot_id].theta = current_time;
 
@@ -70,7 +43,8 @@ namespace NodeSystem::Testing::Calculate::twoSNO {
                                                    Core::Algo::AlgoFloat current_cf_star) mutable
                 {
                     const std::size_t idx = current_slot++;
-                    snap.slots[idx].beta = static_cast<double>(trace.time.beta);
+                    snap.slots[idx].beta = trace.time.beta;
+                    snap.slots[idx].beta_norm = trace.time.beta_normalized;
                     snap.slots[idx].cf = trace.cf.cf;
                     snap.slots[idx].k_beta = trace.cf.k_beta;
                     snap.slots[idx].ro = trace.ro.ro;
@@ -107,6 +81,46 @@ namespace NodeSystem::Testing::Calculate::twoSNO {
             return *this;
         }
 
+    public:
+        template <typename Rep = std::uint64_t, typename Period = std::micro>
+        explicit Simulation(std::chrono::duration<Rep, Period> base_time = std::chrono::microseconds(10'000'000),
+                            std::size_t slot_count = 3,
+                            double out_a = 0.84,
+                            double slot_a = 0.85,
+                            double slot_g = 0.39)
+            : m_base_time_us(std::chrono::duration_cast<std::chrono::microseconds>(base_time).count()),
+              m_output{.c = true, .a = out_a}
+        {
+            m_slots.resize(slot_count);
+            for (auto& s : m_slots) {
+                s.theta = m_base_time_us;
+                s.kgt.b = 0;
+                s.kgt.c = true;
+                s.kgt.a = slot_a;
+                s.kgt.g = slot_g;
+                s.alpha = 0.0;
+            }
+
+            TimeStepSnapshot step0;
+            step0.time_header = std::format("0/{}", m_base_time_us);
+            for (const auto& s : m_slots) {
+                step0.slots.push_back({.alpha = s.alpha, .theta = s.theta});
+            }
+            step0.st2 = "Dwn";
+            step0.to_switch = 0;
+            m_matrix.addStep(std::move(step0));
+        }
+
+        template <typename Rep, typename Period>
+        Simulation& step(std::size_t slot_id, double alpha, std::chrono::duration<Rep, Period> offset, std::uint64_t n = 1) {
+            const auto offset_us = std::chrono::duration_cast<std::chrono::microseconds>(offset).count();
+            return step_impl(slot_id, alpha, offset_us, n);
+        }
+
+        Simulation& step(std::size_t slot_id, double alpha, double offset_seconds, std::uint64_t n = 1) {
+            return step(slot_id, alpha, std::chrono::duration<double>(offset_seconds), n);
+        }
+
         Simulation& save(const std::string& base_filename = "matrix_result") {
             MatrixExporter::exportAll(base_filename, m_matrix);
             return *this;
@@ -116,12 +130,5 @@ namespace NodeSystem::Testing::Calculate::twoSNO {
             return m_matrix;
         }
     };
-
-    inline void runSimulation() {
-        Simulation sim(10000);
-        sim.step(0, 0.90, 10)
-           .step(2, 0.65, 50)
-           .save("matrix_result");
-    }
 
 }

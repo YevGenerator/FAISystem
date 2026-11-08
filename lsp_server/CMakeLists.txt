@@ -1,17 +1,66 @@
-cmake_minimum_required(VERSION 3.20)
-project(RpConfigLspServer)
-
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
-add_compile_options(-Wall -Wextra -O3)
-
 find_package(nlohmann_json CONFIG REQUIRED)
 
-add_executable(rpconfig-lsp main.cpp)
+add_executable(lsp
+        main.cpp
+        lsp_core/transport.hpp
+        lsp_core/json_rpc/errors/error_codes.hpp
+        lsp_core/json_rpc/errors/error_codes.hpp
+        lsp_core/json_rpc/request.hpp
+        lsp_core/json_rpc/field_extractor.hpp
+        lsp_core/json_rpc/json_builder.hpp
+        lsp_core/json_rpc/response.hpp
+        lsp_core/json_rpc/notification.hpp
+        lsp_core/json_rpc/dispatcher.hpp
+        lsp_core/expected.hpp
+        lsp_core/lifecycle/server_state.hpp
+        lsp_core/lifecycle/server_capabilities.hpp
+        lsp_core/lifecycle/server_state_list.hpp
+        lsp_core/json_fields.hpp
+        lsp_core/protocol/range.hpp
+        lsp_core/protocol/diagnostic/diagnostic.hpp
+        lsp_core/protocol/diagnostic/publish_diagnostics.hpp
+        lsp_core/server.hpp
+        lsp_core/methods.hpp
+        lsp_core/protocol/documents/document_item.hpp
+        lsp_core/protocol/documents/document_item.hpp
+        lsp_core/protocol/documents/document_events/document_open.hpp
+        lsp_core/protocol/documents/document_events/document_close.hpp
+        lsp_core/protocol/documents/document_events/document_change.hpp
+        lsp_core/protocol/documents/document_item.hpp
+        lsp_core/protocol/documents/document_store.hpp
+        lsp_core/rules/cursor.hpp
+        lsp_core/rules/syntax_node.hpp
+        lsp_core/rules/rule_result.hpp
+        lsp_core/rules/rule.hpp
+        lsp_core/rules/combinators/trivia.hpp
+        lsp_core/rules/combinators/exact.hpp
+        lsp_core/rules/combinators/satisfy.hpp
+        lsp_core/rules/combinators/take_while.hpp
+        lsp_core/rules/combinators/tag.hpp
+        lsp_core/rules/combinators/sequence.hpp
+        lsp_core/rules/combinators/choice.hpp
+        lsp_core/rules/combinators/enclosed.hpp
+        lsp_core/rules/combinators/repeat.hpp
+        lsp_core/rules/combinators/predicate_rule.hpp
+        lsp_core/protocol/completion/completion_item_kind.hpp
+        lsp_core/protocol/completion/completion_item.hpp
+        lsp_core/protocol/completion/completion_params.hpp
+        fai/analyzer.hpp
+        fai/syntax/let_declaration.hpp
+        fai/types/uint8.hpp
+        fai/syntax/signs.hpp
+        fai/syntax/signs.hpp
+        fai/syntax/keywords.hpp
+        lsp_core/rules/combinators/expect.hpp
+        fai/syntax/identifier.hpp
+        fai/syntax/raw_value_token.hpp
+        lsp_core/protocol/semantic_tokens/semantic_tokens.hpp
+        fai/syntax/structs/struct_field_entry.hpp
+)
 
-# 5. Прив'язуємо бібліотеку до твого проєкту
-# nlohmann_json::nlohmann_json - це офіційне ім'я цілі цієї бібліотеки
-target_link_libraries(rpconfig-lsp PRIVATE nlohmann_json::nlohmann_json)
-target_link_options(rpconfig-lsp PRIVATE -static -static-libgcc -static-libstdc++)
-# Якщо в тебе ядро (ConfigTypes.hpp) лежить в іншій папці, не забудь додати:
-# target_include_directories(rpconfig-lsp PRIVATE ../Path/To/Core)
+target_link_libraries(lsp PRIVATE nlohmann_json::nlohmann_json)
+target_link_options(lsp PRIVATE -static -static-libgcc -static-libstdc++)
+
+target_link_libraries(lsp PRIVATE RP_Core_Strings
+)
+

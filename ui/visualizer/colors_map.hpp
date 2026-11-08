@@ -3,7 +3,7 @@
 #include <string_view>
 #include <unordered_map>
 
-#include "color_key.hpp"
+#include "../core/color_key.hpp"
 #include "color_names.hpp"
 
 namespace NodeSystem::Visual {

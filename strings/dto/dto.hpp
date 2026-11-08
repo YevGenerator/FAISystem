@@ -11,6 +11,7 @@
 namespace NodeSystem::strings::dto
 {
     using Id = Core::types::ID;
+    using WorkerInt = Core::types::WorkerInt;
     using NodeId = Core::Nodes::NodeId;
     using Bool = Core::types::NetBool;
     using Float = Core::types::Float;

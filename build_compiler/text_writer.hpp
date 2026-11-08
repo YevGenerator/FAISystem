@@ -16,6 +16,12 @@ namespace NodeSystem::Compiler
             out << strings::Keywords::Cmd::Device << " " << deviceId << "\n";
         }
 
+        void operator()(const strings::dto::WorkerInt& workers) const
+        {
+            out << strings::Keywords::Cmd::Workers << " "
+                << static_cast<int>(workers) << "\n";
+        }
+
         void operator()(const strings::dto::KgIp& ip) const
         {
             out << strings::Keywords::Cmd::Ip << " "
