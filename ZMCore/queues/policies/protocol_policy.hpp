@@ -51,7 +51,7 @@ namespace NodeSystem::ZMCore::Queues::Policies {
             if (!response) {
                 return std::nullopt;
             }
-            if (*response != sizeof(packet)) return std::nullopt;
+            if (response->size != sizeof(packet) || response->untruncated_size != sizeof(packet)) return std::nullopt;
             return packet;
         }
     };
