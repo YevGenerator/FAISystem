@@ -18,6 +18,7 @@ namespace NodeSystem::ZMCore {
 
     public:
         CmdProcessorContext<IsServer> context;
+        bool ipApplied = false;
 
         void init(CmdProcessorContext<IsServer> cmdContext) {
             this->context = cmdContext;
@@ -63,6 +64,8 @@ namespace NodeSystem::ZMCore {
         }
 
         void process(const NetworkPacket<CmdIp> &cmd) {
+            if (ipApplied) throw std::runtime_error("IP can only be configured once during startup");
+            ipApplied = true;
             context.deviceConfig->serverAddress.host = cmd.data.host;
             context.deviceConfig->serverAddress.port = cmd.data.port;
             Core::LoggerBin.log(Core::types::logs::LogSetIp{cmd.data}, event(cmd.eventHeader));
@@ -126,7 +129,7 @@ namespace NodeSystem::ZMCore {
         void process(const NetworkPacket<CmdBindSingle> &cmd) {
             const auto id = context.deviceConfig->deviceId;
             const bool fromLocal = cmd.data.from.device == id;
-            // Every host reads the same configuration; never forward during bootstrap.
+            // The server distributes a single authoritative topology.
             if (fromLocal || (IsServer && cmd.data.deviceTo != id)) {
                 context.routeTable->add_address({cmd.data.from.id_lvl, cmd.data.from.id_val},
                                                Core::Nodes::ExternalAddress{cmd.data.deviceTo});
