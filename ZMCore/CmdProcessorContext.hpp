@@ -1,5 +1,6 @@
 #pragma once
 #include "delegate.hpp"
+#include "OutboundQueue.hpp"
 #include <optional>
 #include "DeviceConfig.hpp"
 #include "WorkerPool.hpp"
@@ -16,6 +17,9 @@ namespace NodeSystem::ZMCore
         WorkerPool* workerMaster = nullptr;
         std::conditional_t<IsServer, Queues::ZMBusServerTcp, Queues::ZMBusClientTcp>* tcpQueue = nullptr;
         RunDelegate run{};
+        ReconnectDelegate startBus{};
+        ReconnectDelegate awaitBusReady{};
+        OutboundQueue* outbound = nullptr;
         std::atomic<bool>* need_reconnect = nullptr;
         Queues::ZMRouterPush* routerQueue = nullptr;
         ZMSensors::CoreSensors* sensors = nullptr;
