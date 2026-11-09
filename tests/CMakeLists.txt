@@ -35,3 +35,7 @@ add_test(NAME zmq_queue_smoke COMMAND zmq_queue_smoke)
 add_executable(outbound_queue_smoke outbound_queue_smoke.cpp)
 target_link_libraries(outbound_queue_smoke PRIVATE ZMCore)
 add_test(NAME outbound_queue_smoke COMMAND outbound_queue_smoke)
+
+add_executable(lifecycle_context_smoke lifecycle_context_smoke.cpp)
+target_link_libraries(lifecycle_context_smoke PRIVATE ZMCore)
+add_test(NAME lifecycle_context_smoke COMMAND lifecycle_context_smoke)
