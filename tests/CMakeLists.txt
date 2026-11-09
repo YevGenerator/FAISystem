@@ -31,3 +31,7 @@ add_test(NAME compiler_roundtrip
 add_executable(zmq_queue_smoke zmq_queue_smoke.cpp)
 target_link_libraries(zmq_queue_smoke PRIVATE ZMCore)
 add_test(NAME zmq_queue_smoke COMMAND zmq_queue_smoke)
+
+add_executable(outbound_queue_smoke outbound_queue_smoke.cpp)
+target_link_libraries(outbound_queue_smoke PRIVATE ZMCore)
+add_test(NAME outbound_queue_smoke COMMAND outbound_queue_smoke)
