@@ -20,7 +20,6 @@ namespace NodeSystem::ZMCore
         ReconnectDelegate startBus{};
         ReconnectDelegate awaitBusReady{};
         OutboundQueue* outbound = nullptr;
-        std::atomic<bool>* need_reconnect = nullptr;
         Queues::ZMRouterPush* routerQueue = nullptr;
         ZMSensors::CoreSensors* sensors = nullptr;
         Core::Nodes::NodeTable* nodeTable = nullptr;
