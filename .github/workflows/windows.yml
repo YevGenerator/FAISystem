@@ -32,7 +32,11 @@ jobs:
 
       - name: Build CLI runtime targets first
         shell: pwsh
-        run: cmake --build build --config Release --target serverZMQ servantZMQ --parallel 2
+        run: cmake --build build --config Release --target serverZMQ servantZMQ outbound_queue_smoke zmq_queue_smoke --parallel 2
+
+      - name: Run targeted ZeroMQ runtime tests
+        shell: pwsh
+        run: ctest --test-dir build -C Release -R "(outbound_queue_smoke|zmq_queue_smoke)" --output-on-failure
 
       - name: Build every module
         shell: pwsh
