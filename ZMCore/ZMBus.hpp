@@ -36,7 +36,6 @@ namespace NodeSystem::ZMCore {
     template<bool IsServer>
     class ZMBus {
     public:
-        std::atomic<bool> needs_reconnect{false};
         OutboundQueue outbound;
         Core::DeviceConfig config;
         std::conditional_t<IsServer, Queues::ZMBusServerTcp, Queues::ZMBusClientTcp> tcpQueue;
@@ -73,7 +72,6 @@ namespace NodeSystem::ZMCore {
             context.deviceConfig = &config;
             context.tcpQueue = &tcpQueue;
             context.routerQueue = &routerQueue;
-            context.need_reconnect = &needs_reconnect;
             context.outbound = &outbound;
             this->processor.init(context);
         }
@@ -140,11 +138,6 @@ namespace NodeSystem::ZMCore {
                     }
                 }
             }
-        }
-
-        void reconnectTcp() {
-            tcpQueue.socket.close();
-            tcpQueue.init(config);
         }
 
         void processTcp(const zmq::pollitem_t &item) requires IsServer {
