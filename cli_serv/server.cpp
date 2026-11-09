@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
         bus.config.deviceId = *options.deviceIdOverride;
     }
 
-    ZMCore::ThreadRunner<ZMCore::ZMBus<true>& busThread(bus);
+    ZMCore::ThreadRunner<ZMCore::ZMBus<true>&> busThread(bus);
     ZMCore::RuntimeController runtime(workerPool, router, sensors);
 
     ZMCore::CmdProcessorContext<true> cmdContext{
@@ -57,21 +57,21 @@ int main(int argc, char* argv[]) {
 
     bus.init(cmdContext);
 
-    std::cout << "[Server] Loading config from " << options.configPath << "...\\n";
+    std::cout << "[Server] Loading config from " << options.configPath << "...\n";
     try {
         if (!Serv::BinaryConfigReader::loadAndExecute(options.configPath, bus.processor)) {
-            std::cerr << "[Server] Failed to load config!\\n";
+            std::cerr << "[Server] Failed to load config!\n";
             busThread.shutdown();
             return 1;
         }
     } catch (const std::exception& error) {
-        std::cerr << "[Server] Configuration/runtime error: " << error.what() << '\\n';
+        std::cerr << "[Server] Configuration/runtime error: " << error.what() << '\n';
         busThread.shutdown();
         return 1;
     }
 
-    std::cout << "[Log] Writing " << logPath << "\\n";
-    std::cout << "[Server] Running. Press Enter to shutdown..." << "\\n";
+    std::cout << "[Log] Writing " << logPath << "\n";
+    std::cout << "[Server] Running. Press Enter to shutdown..." << "\n";
     std::cin.get();
 
     runtime.run(false);
