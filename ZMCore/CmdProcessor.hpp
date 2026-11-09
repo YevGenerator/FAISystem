@@ -1,5 +1,6 @@
 #pragma once
 #include <variant>
+#include <stdexcept>
 
 #include "CmdProcessorContext.hpp"
 #include "WorkerPool.hpp"
@@ -17,7 +18,6 @@ namespace NodeSystem::ZMCore {
 
     public:
         CmdProcessorContext<IsServer> context;
-        bool bootstrapComplete = false;
 
         void init(CmdProcessorContext<IsServer> cmdContext) {
             this->context = cmdContext;
@@ -54,7 +54,7 @@ namespace NodeSystem::ZMCore {
         void process(const NetworkPacket<CmdRun> &cmd) {
             if (cmd.data.device != context.deviceConfig->deviceId) {
                 if constexpr (IsServer) {
-                    if (bootstrapComplete) context.tcpQueue->push(cmd.data.device, cmd);
+                    context.outbound->push(cmd.data.device, cmd);
                 }
                 return;
             }
@@ -65,8 +65,9 @@ namespace NodeSystem::ZMCore {
         void process(const NetworkPacket<CmdIp> &cmd) {
             context.deviceConfig->serverAddress.host = cmd.data.host;
             context.deviceConfig->serverAddress.port = cmd.data.port;
-            context.need_reconnect->store(true, std::memory_order_relaxed);
             Core::LoggerBin.log(Core::types::logs::LogSetIp{cmd.data}, event(cmd.eventHeader));
+            if (context.startBus) context.startBus();
+            if (context.awaitBusReady) context.awaitBusReady();
         }
 
         void process(const NetworkPacket<CmdRead> &cmd) {
@@ -84,7 +85,7 @@ namespace NodeSystem::ZMCore {
         void process(const NetworkPacket<CmdSensorCreate> &cmd) {
             if (cmd.data.device != context.deviceConfig->deviceId) {
                 if constexpr (IsServer) {
-                    if (bootstrapComplete) context.tcpQueue->push(cmd.data.device, cmd);
+                    context.outbound->push(cmd.data.device, cmd);
                 }
                 return;
             }
@@ -95,7 +96,7 @@ namespace NodeSystem::ZMCore {
         void process(const NetworkPacket<CmdNodeCreate> &cmd) {
             if (cmd.data.device != context.deviceConfig->deviceId) {
                 if constexpr (IsServer) {
-                    if (bootstrapComplete) context.tcpQueue->push(cmd.data.device, cmd);
+                    context.outbound->push(cmd.data.device, cmd);
                 }
                 return;
             }
@@ -110,7 +111,7 @@ namespace NodeSystem::ZMCore {
         void process(const NetworkPacket<CmdNodeAddInput> &cmd) {
             if (cmd.data.device != context.deviceConfig->deviceId) {
                 if constexpr (IsServer) {
-                    if (bootstrapComplete) context.tcpQueue->push(cmd.data.device, cmd);
+                    context.outbound->push(cmd.data.device, cmd);
                 }
                 return;
             }
@@ -134,7 +135,7 @@ namespace NodeSystem::ZMCore {
                 }, event(cmd.eventHeader));
             }
             if constexpr (IsServer) {
-                if (bootstrapComplete && !fromLocal) context.tcpQueue->push(cmd.data.from.device, cmd);
+                if (!fromLocal) context.outbound->push(cmd.data.from.device, cmd);
             }
         }
 
@@ -170,11 +171,11 @@ namespace NodeSystem::ZMCore {
                 }, event(cmd.eventHeader));
             }
             if constexpr (IsServer) {
-                if (bootstrapComplete) {
+                {
                     if (!fromLocal)
-                        context.tcpQueue->push(cmd.data.from.device, cmd);
+                        context.outbound->push(cmd.data.from.device, cmd);
                     if (!toLocal && cmd.data.to.device != cmd.data.from.device)
-                        context.tcpQueue->push(cmd.data.to.device, cmd);
+                        context.outbound->push(cmd.data.to.device, cmd);
                 }
             }
         }
@@ -182,7 +183,7 @@ namespace NodeSystem::ZMCore {
         void process(const NodeTransportPacket &packet) {
             if constexpr (IsServer) {
                 if (packet.data.deviceId != context.deviceConfig->deviceId) {
-                    context.tcpQueue->push(packet.data.deviceId, packet);
+                    context.outbound->push(packet.data.deviceId, packet);
                     return;
                 }
             }
