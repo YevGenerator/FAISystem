@@ -1,4 +1,5 @@
-#include <cassert>
+#include <stdexcept>
+#define CHECK(expr) do { if (!(expr)) throw std::runtime_error("Check failed: " #expr); } while(false)
 #include <thread>
 #include <vector>
 #include "ZMCore/OutboundQueue.hpp"
@@ -11,11 +12,11 @@ int main() {
     queue.push(2, packet);
     queue.push(3, packet);
     auto initial = queue.drain();
-    assert(initial.size() == 2);
-    assert(initial[0].deviceId == 2);
-    assert(initial[1].deviceId == 3);
-    assert(initial[0].bytes.size() == sizeof(packet));
-    assert(queue.drain().empty());
+    CHECK(initial.size() == 2);
+    CHECK(initial[0].deviceId == 2);
+    CHECK(initial[1].deviceId == 3);
+    CHECK(initial[0].bytes.size() == sizeof(packet));
+    CHECK(queue.drain().empty());
 
     constexpr int senders = 4;
     constexpr int packetsPerSender = 100;
@@ -27,5 +28,5 @@ int main() {
         });
     }
     for (auto& thread : threads) thread.join();
-    assert(queue.drain().size() == senders * packetsPerSender);
+    CHECK(queue.drain().size() == senders * packetsPerSender);
 }
