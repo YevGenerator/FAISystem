@@ -71,6 +71,13 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    if (!bus.processor.ipApplied) {
+        std::cerr << "[Servant] Missing ip command; TCP bus was never initialized.\n";
+        runtime.run(false);
+        busThread.shutdown();
+        return 1;
+    }
+
     std::cout << "[Log] Writing " << logPath << "\n";
     std::cout << "[Servant] Device ID: " << bus.config.deviceId << " running. Press Enter to shutdown..." << "\n";
     std::cin.get();
