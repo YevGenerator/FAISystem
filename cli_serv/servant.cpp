@@ -62,11 +62,13 @@ int main(int argc, char* argv[]) {
     try {
         if (!Serv::BinaryConfigReader::loadAndExecute(options.configPath, bus.processor)) {
             std::cerr << "[Servant] Failed to load config!\n";
+            runtime.run(false);
             busThread.shutdown();
             return 1;
         }
     } catch (const std::exception& error) {
         std::cerr << "[Servant] Configuration/runtime error: " << error.what() << '\n';
+        runtime.run(false);
         busThread.shutdown();
         return 1;
     }
