@@ -12,7 +12,7 @@ namespace NodeSystem::Visual::Keys::Colors {
     constexpr auto SelectedBorder = "Selected Border";
 
     constexpr auto SlotHoverBackground = "Slot Hover Background";
-    constexpr auto SlotActiveBackground = "Slot Active (Data) Background"; // Коли є дані
+    constexpr auto SlotActiveBackground = "Slot Active (Data) Background";
     constexpr auto SlotInBackground = "Slot In Background";
     constexpr auto SlotOutPositiveBackground = "Slot Out Positive Background";
 

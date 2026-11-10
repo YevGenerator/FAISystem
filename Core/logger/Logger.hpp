@@ -1,53 +1,42 @@
 #pragma once
-#include <mutex>
+#include <atomic>
 #include <fstream>
+#include <filesystem>
+#include <mutex>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <utility>
 #include "LogRecordList.hpp"
-
 namespace NodeSystem::Core {
-    template<typename Writer, typename P>
-    concept CanWriteRecord = requires(Writer w, const LogRecordList::LogRecord<P> &r)
-    {
-        { w.write(r) } -> std::same_as<void>;
-    };
-
-    template<typename Writer, typename... Ts>
-    concept IsLogWriter = (CanWriteRecord<Writer, Ts> && ...);
-
-    struct FileWriteStream {
-        std::ofstream out;
-
-        explicit FileWriteStream(const std::string &path)
-            : out(path, std::ios::binary) {
-        }
-
-        template<typename Record>
-        void write(const LogRecordList::LogRecord<Record> &record) {
-            out.write(reinterpret_cast<const char *>(&record), sizeof(record));
-        }
-    };
-
-    static_assert(IsLogWriter<FileWriteStream>);
-
-
-    template<typename Writer, bool Enabled = true>
-        requires IsLogWriter<Writer>
-    struct Logger {
-    private:
-        Writer writer;
-        inline static std::mutex log_mutex{};
-
-    public:
-        explicit Logger(Writer w) : writer(std::move(w)) {
-        }
-
-        template<typename P>
-        void log(const P &record, const EventCounter::EventHeader &header = EventCounter::event()) {
-            if constexpr (Enabled) {
-                std::scoped_lock lock{log_mutex};
-                writer.write(LogRecordList::CreateLogRecord<P>(record, header));
-            }
-        }
-    };
-
-    inline Logger<FileWriteStream, true> LoggerBin{FileWriteStream{"log2.bin"}};
+struct FileWriteStream {
+    std::ofstream out;
+    void open(const std::filesystem::path& path) {
+        out.close(); out.clear(); out.open(path, std::ios::binary | std::ios::trunc);
+        if (!out) throw std::runtime_error("Unable to open log file: " + path.string());
+    }
+    template<typename Record>
+    void write(const LogRecordList::LogRecord<Record>& record) {
+        if (out.is_open()) { out.write(reinterpret_cast<const char*>(&record), sizeof(record)); out.flush(); }
+    }
+};
+template<typename Writer = FileWriteStream, bool Enabled = true>
+class Logger {
+    Writer writer{};
+    std::mutex logMutex;
+    std::atomic<types::ID> deviceId{0};
+public:
+    void open(const std::filesystem::path& path) { std::scoped_lock lock{logMutex}; writer.open(path); }
+    void setDeviceId(types::ID id) { deviceId.store(id, std::memory_order_relaxed); }
+    [[nodiscard]] auto newEvent(const std::optional<Events::EventHeader>& parent = std::nullopt) const -> Events::EventHeader {
+        if (parent && !parent->eventId.isNull())
+            return Events::EventCounter::newEvent(deviceId.load(std::memory_order_relaxed), parent);
+        return Events::EventCounter::newEvent(deviceId.load(std::memory_order_relaxed));
+    }
+    template<typename P>
+    void log(const P& data, const Events::EventHeader& header) {
+        if constexpr (Enabled) { std::scoped_lock lock{logMutex}; writer.write(LogRecordList::CreateLogRecord(data, header)); }
+    }
+};
+inline Logger<> LoggerBin{};
 }

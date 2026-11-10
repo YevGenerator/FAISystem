@@ -1,5 +1,8 @@
 #pragma once
 #include <zmq.hpp>
+#include <cstring>
+#include <algorithm>
+#include <type_traits>
 
 #include "commands/CommandList.hpp"
 
@@ -48,6 +51,7 @@ namespace NodeSystem::ZMCore::Queues::Policies {
             if (!response) {
                 return std::nullopt;
             }
+            if (response->size != sizeof(packet) || response->untruncated_size != sizeof(packet)) return std::nullopt;
             return packet;
         }
     };
@@ -111,6 +115,11 @@ namespace NodeSystem::ZMCore::Queues::Policies {
 
         static void push(zmq::socket_ref socket, const zmq::message_t &payload) {
             socket.send(zmq::buffer(payload.data(), payload.size()), zmq::send_flags::none);
+        }
+        template<typename TPacket>
+        static void push(zmq::socket_ref socket, const TPacket& packet) {
+            static_assert(std::is_trivially_copyable_v<TPacket>);
+            socket.send(zmq::buffer(&packet, sizeof(packet)), zmq::send_flags::none);
         }
     };
 

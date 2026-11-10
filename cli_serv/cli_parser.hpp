@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <charconv>
 #include <filesystem>
 #include <iostream>
 #include <optional>
@@ -12,6 +13,7 @@ namespace NodeSystem::Serv
     {
         std::filesystem::path configPath = "output.bin";
         std::optional<std::uint32_t> deviceIdOverride = std::nullopt;
+        std::optional<std::filesystem::path> logPath = std::nullopt;
     };
 
     class CliParser
@@ -38,14 +40,30 @@ namespace NodeSystem::Serv
                 return options;
             }
 
-            options.configPath = argv[1];
+            int firstFlagIndex = 2;
+            if (!isServer && argc >= 3) {
+                const std::string_view idText = argv[1];
+                std::uint32_t legacyId{};
+                const auto parsed = std::from_chars(idText.data(), idText.data() + idText.size(), legacyId);
+                if (parsed.ec == std::errc{} && parsed.ptr == idText.data() + idText.size()) {
+                    options.deviceIdOverride = legacyId;
+                    options.configPath = argv[2];
+                    firstFlagIndex = 3;
+                } else {
+                    options.configPath = argv[1];
+                }
+            } else {
+                options.configPath = argv[1];
+            }
 
-            for (int i = 2; i < argc; ++i)
+            for (int i = firstFlagIndex; i < argc; ++i)
             {
                 std::string_view arg = argv[i];
                 if ((arg == "-d" || arg == "--device") && (i + 1 < argc))
                 {
                     options.deviceIdOverride = static_cast<std::uint32_t>(std::stoul(argv[++i]));
+                } else if (arg == "--log" && (i + 1 < argc)) {
+                    options.logPath = std::filesystem::path(argv[++i]);
                 }
             }
 

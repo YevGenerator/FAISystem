@@ -13,6 +13,7 @@ namespace NodeSystem::Compiler
     private:
         const char* ptr;
         std::size_t available;
+        bool invalid = false;
 
         strings::dto::KgNode assembleNode(const Core::Commands::CmdNodeCreate& cmd)
         {
@@ -156,6 +157,8 @@ namespace NodeSystem::Compiler
         {
         }
 
+        [[nodiscard]] bool good() const { return !invalid; }
+
         std::optional<strings::ParsedCommand> nextCommand()
         {
             while (available > 0)
@@ -163,6 +166,12 @@ namespace NodeSystem::Compiler
                 auto packetOpt = Core::Commands::CommandList::nextFromFile(ptr, available);
                 if (!packetOpt)
                 {
+                    invalid = true;
+                    return std::nullopt;
+                }
+                if (std::holds_alternative<std::monostate>(*packetOpt))
+                {
+                    invalid = true;
                     return std::nullopt;
                 }
 

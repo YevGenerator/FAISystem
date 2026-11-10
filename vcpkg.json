@@ -1,0 +1,13 @@
+{
+  "name": "fai-system",
+  "version-string": "0.1.0",
+  "dependencies": [
+    "cppzmq",
+    "glfw3",
+    {
+      "name": "imgui",
+      "features": ["glfw-binding", "opengl3-binding"]
+    },
+    "nlohmann-json"
+  ]
+}

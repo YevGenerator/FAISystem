@@ -46,7 +46,6 @@ namespace NodeSystem::Visual {
             float totalWHeight = workerCount * 60.0f - 20.0f;
             size.y = std::max({460.0f, totalSHeight + 100.0f, totalWHeight + 100.0f});
 
-            // --- SENSORS GROUP ---
             float sStartY = (size.y - totalSHeight) / 2.0f;
             float currentY = sStartY;
             for(size_t i = 0; i < sensors.size(); ++i) {
@@ -59,7 +58,6 @@ namespace NodeSystem::Visual {
             sGrpBot = currentY - 20.0f;
             sensorOutHub = ImVec2(110.0f, (sGrpTop + sGrpBot) / 2.0f);
 
-            // --- WORKERS GROUP ---
             float wStartY = (size.y - totalWHeight) / 2.0f;
             currentY = wStartY;
             workers.resize(workerCount);
@@ -75,7 +73,6 @@ namespace NodeSystem::Visual {
             workerInHub = ImVec2(635.0f, (wGrpTop + wGrpBot) / 2.0f);
             workerOutHub = ImVec2(725.0f, (wGrpTop + wGrpBot) / 2.0f);
 
-            // --- MAIN BLOCKS ---
             router.pos = ImVec2(350.0f, size.y / 2.0f - 35.0f);
             router.size = ImVec2(100.0f, 70.0f);
             router.name = "Router";
@@ -84,7 +81,6 @@ namespace NodeSystem::Visual {
             tcpBridge.size = ImVec2(100.0f, 60.0f);
             tcpBridge.name = "TCP Bridge";
 
-            // --- QUEUES ---
             queueRouter.pos = ImVec2(240.0f, 60.0f);
             queueRouter.size = ImVec2(25.0f, size.y - 120.0f);
             queueRouter.name = "RQ";
@@ -97,7 +93,6 @@ namespace NodeSystem::Visual {
             queueForward.size = ImVec2(20.0f, 15.0f);
             queueForward.name = "FQ";
 
-            // --- RQ PORTS ---
             rqPortWorker.pos = ImVec2(215.0f, 80.0f); rqPortWorker.size = ImVec2(25.0f, 25.0f);
             rqPortSensor.pos = ImVec2(215.0f, sensorOutHub.y - 12.5f); rqPortSensor.size = ImVec2(25.0f, 25.0f);
             rqPortTcp.pos    = ImVec2(215.0f, tcpBridge.pos.y + 17.5f); rqPortTcp.size = ImVec2(25.0f, 25.0f);
@@ -126,26 +121,23 @@ namespace NodeSystem::Visual {
             for(auto& w : workers) buildRoute(getPin(ArchCompType::Queue_Worker), w.pin, { c(queueWorker), rc(queueWorker), workerInHub, lc(w) });
         }
 
-        // ОНОВЛЕНО: додано emitFlashes та recvFlashes
         void draw(ImDrawList* dl, ImVec2 origin, float zoom, std::map<ArchPinKey, ImVec2>& pinRegistry,
                   const std::map<ArchPinKey, int>& activeQueues, const std::map<ArchPinKey, bool>& busyWorkers,
                   const std::map<ArchPinKey, float>& emitFlashes, const std::map<ArchPinKey, float>& recvFlashes) {
 
             ImVec2 p0 = origin + pos * zoom;
 
-            // --- ФОН ДЕВАЙСУ І НАЗВА ---
             dl->AddRectFilled(p0, p0 + size * zoom, IM_COL32(30, 30, 35, 255), 10.0f * zoom);
             dl->AddRect(p0, p0 + size * zoom, IM_COL32(80, 80, 90, 255), 10.0f * zoom, 0, 2.0f * zoom);
             dl->AddText(p0 + ImVec2(15, 15) * zoom, IM_COL32(150, 200, 255, 255), ("DEVICE " + std::to_string(deviceId)).c_str());
 
-            // --- ВІЗУАЛЬНІ РАМКИ ГРУП ---
+
             dl->AddRect(p0 + ImVec2(15.0f, sGrpTop) * zoom, p0 + ImVec2(sensorOutHub.x, sGrpBot) * zoom, IM_COL32(200, 200, 200, 100), 5.0f*zoom, 0, 1.5f*zoom);
             dl->AddText(p0 + ImVec2(20.0f, sGrpTop + 5.0f)*zoom, IM_COL32(200, 200, 200, 150), "Sensors Grp");
 
             dl->AddRect(p0 + ImVec2(workerInHub.x, wGrpTop) * zoom, p0 + ImVec2(workerOutHub.x, wGrpBot) * zoom, IM_COL32(200, 200, 200, 100), 5.0f*zoom, 0, 1.5f*zoom);
             dl->AddText(p0 + ImVec2(workerInHub.x + 5.0f, wGrpTop + 5.0f)*zoom, IM_COL32(200, 200, 200, 150), "Workers Grp");
 
-            // --- ТРУБИ ---
             ImU32 pipeCol = IM_COL32(110, 140, 160, 255);
             float pt = 3.0f * zoom;
             auto drawPipe = [&](ImVec2 p1, ImVec2 p2) { dl->AddLine(p0 + p1*zoom, p0 + p2*zoom, pipeCol, pt); };
@@ -174,23 +166,20 @@ namespace NodeSystem::Visual {
             drawPipe(bc(router), tc(queueForward));
             drawPipe(bc(queueForward), tc(tcpBridge));
 
-            // --- ХАБИ ---
             auto drawHub = [&](ImVec2 hPos) { dl->AddRectFilled(p0 + hPos*zoom - ImVec2(4,4)*zoom, p0 + hPos*zoom + ImVec2(4,4)*zoom, IM_COL32(200,200,200,255)); };
             drawHub(sensorOutHub); drawHub(workerInHub); drawHub(workerOutHub);
 
-            // --- БЛОКИ ТА АНІМАЦІЯ ЗАТУХАННЯ ---
             auto drawBlock = [&](const ArchBlock& b, ImU32 col) {
                 ImVec2 bp0 = p0 + b.pos * zoom; ImVec2 bp1 = bp0 + b.size * zoom;
                 bool isBusy = busyWorkers.contains(b.pin) && busyWorkers.at(b.pin);
                 ImU32 baseCol = isBusy ? IM_COL32(0, 200, 100, 255) : col;
                 dl->AddRectFilled(bp0, bp1, baseCol, 3.0f * zoom);
 
-                // Receive Flash (Green)
                 if (recvFlashes.contains(b.pin)) {
                     float intensity = recvFlashes.at(b.pin);
                     dl->AddRectFilled(bp0, bp1, IM_COL32(0, 255, 100, static_cast<int>(200 * intensity)), 3.0f * zoom);
                 }
-                // Emit Flash (Yellow)
+
                 if (emitFlashes.contains(b.pin)) {
                     float intensity = emitFlashes.at(b.pin);
                     dl->AddRectFilled(bp0, bp1, IM_COL32(255, 200, 0, static_cast<int>(200 * intensity)), 3.0f * zoom);
@@ -213,13 +202,11 @@ namespace NodeSystem::Visual {
             drawBlock(rqPortWorker, IM_COL32(200, 150, 50, 200)); drawBlock(rqPortSensor, IM_COL32(200, 150, 50, 200)); drawBlock(rqPortTcp, IM_COL32(200, 150, 50, 200));
             drawBlock(queueWorker, IM_COL32(100, 200, 100, 150));
 
-            // --- ЛІЧИЛЬНИКИ ---
             if (activeQueues.contains(getPin(ArchCompType::Queue_Router)) && activeQueues.at(getPin(ArchCompType::Queue_Router)) > 0) {
                 std::string qStr = std::to_string(activeQueues.at(getPin(ArchCompType::Queue_Router)));
                 dl->AddText(p0 + queueRouter.pos*zoom + ImVec2(5, queueRouter.size.y/2)*zoom, IM_COL32(255, 50, 50, 255), qStr.c_str());
             }
 
-            // --- РЕЄСТРАЦІЯ TCP ПІНІВ ---
             pinRegistry[getPin(ArchCompType::TcpRx)] = p0 + ImVec2(tcpBridge.pos.x + tcpBridge.size.x * 0.3f, tcpBridge.pos.y + tcpBridge.size.y) * zoom;
             pinRegistry[getPin(ArchCompType::TcpTx)] = p0 + ImVec2(tcpBridge.pos.x + tcpBridge.size.x * 0.7f, tcpBridge.pos.y + tcpBridge.size.y) * zoom;
         }

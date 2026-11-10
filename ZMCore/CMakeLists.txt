@@ -24,6 +24,6 @@ target_include_directories(ZMCore INTERFACE
 )
 
 find_package(cppzmq REQUIRED)
-target_link_libraries(ZMCore INTERFACE cppzmq cppzmq-static)
+target_link_libraries(ZMCore INTERFACE cppzmq)
 target_link_libraries(ZMCore INTERFACE RP_Core)
 # target_link_libraries(ZMCore INTERFACE RP_Core_Strings)

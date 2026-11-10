@@ -17,14 +17,12 @@ namespace NodeSystem::Testing::Calculate::twoSNO {
         void writeHeader() override {
             const auto& cols = AlgoTraceRecord::headers();
 
-            // Заголовки
             m_out << "|";
             for (const auto& col : cols) {
                 m_out << " " << col << " |";
             }
             m_out << "\n|";
 
-            // Розділювач колонок Markdown (:---:)
             for (std::size_t i = 0; i < cols.size(); ++i) {
                 m_out << ":---:|";
             }

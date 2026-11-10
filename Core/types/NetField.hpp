@@ -1,5 +1,6 @@
 #pragma once
 #include <bit>
+#include <type_traits>
 #include <cstdint>
 
 namespace NodeSystem::Core::types {

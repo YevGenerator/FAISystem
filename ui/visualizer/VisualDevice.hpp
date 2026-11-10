@@ -7,7 +7,7 @@ namespace NodeSystem::Visual {
     class VisualDevice : public VisualBlock {
     public:
         std::vector<VisualBlock*> blocks;
-        Core::types::SmallInt workersNumber = 0;
+        Core::types::WorkerInt workersNumber = 0;
         std::string ipAddress = "0.0.0.0:0";
 
         VisualDevice(int id, ImVec2 position)
@@ -55,7 +55,6 @@ namespace NodeSystem::Visual {
             drawBase(dl, origin, zoom, sel);
             ImVec2 start = origin + (pos * zoom);
 
-            // Реєстрація висячого SingleBind (DeviceId, -1, DeviceId, -1)
             pinRegistry[{this->parentDeviceId, -1, this->blockId, -1}] = ImVec2(start.x, start.y + (floatsMap[Keys::Floats::titleHeight] / 2.0f) * zoom);
 
             for (auto* b : blocks) {

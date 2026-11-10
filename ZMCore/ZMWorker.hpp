@@ -11,7 +11,7 @@ namespace NodeSystem::ZMCore {
         using CoreWorker = Core::Nodes::Worker<Queues::ZMRouterPush, Queues::ZMWorkerPull>;
 
         ZMWorker(const Core::types::WorkerInt id, zmq::context_t &context, Core::Nodes::NodeTable &nodeStore)
-            : id(id), coreWorker(nodeStore, Queues::ZMRouterPush{context}, Queues::ZMWorkerPull{context}) {
+            : id(id), coreWorker(nodeStore, Queues::ZMRouterPush{context}, Queues::ZMWorkerPull{context}, id) {
         }
 
         void run(const std::stop_token &stopToken) {

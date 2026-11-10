@@ -124,8 +124,11 @@ namespace NodeSystem::Compiler
                 return 1;
             }
 
-            if (!action(buffer, outFile))
+            if (!action(buffer, outFile) || !outFile.good())
             {
+                outFile.close();
+                std::error_code ec;
+                fs::remove(outputPath, ec);
                 std::cerr << "[Error] " << config.toolName << " failed due to syntax or data errors.\n";
                 return 1;
             }

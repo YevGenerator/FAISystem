@@ -3,6 +3,8 @@
 #include <string>
 #include <map>
 #include "color_names.hpp"
+#include "floats_map.hpp"
+#include "colors_map.hpp"
 #include "SelectionType.hpp"
 
 namespace NodeSystem::Visual {
@@ -44,7 +46,6 @@ namespace NodeSystem::Visual {
             ImVec2 blockMax = start + size * zoom;
             ImVec2 headerMax = start + ImVec2(size.x, floatsMap[Keys::Floats::titleHeight]) * zoom;
 
-            // Замінено Background на BlockBackground
             drawList->AddRectFilled(start, blockMax, colorsMap[Keys::Colors::BlockBackground], 0);
 
             ImU32 headerBg = this->isSelected ? colorsMap[Keys::Colors::SelectedHeaderBackground] : colorsMap[Keys::Colors::HeaderBackground];

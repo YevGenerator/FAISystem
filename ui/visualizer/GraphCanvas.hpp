@@ -116,7 +116,6 @@ namespace NodeSystem::Visual {
             float maxTime = getTraceMaxTime();
             if (maxTime <= minTime) maxTime = minTime + 1.0f;
 
-            // --- ПЛЕЄР ---
             ImGui::SetCursorPos(ImVec2(10, 10));
             ImGui::BeginGroup();
             ImGui::PushStyleColor(ImGuiCol_ChildBg, (ImU32)colorsMap[Keys::Colors::PlayerBackground]);
@@ -222,12 +221,11 @@ namespace NodeSystem::Visual {
                 }
             }
 
-            // --- ЗАЦИКЛЕННЯ АБО ЗУПИНКА ---
             if (isPlaying && !flights.empty()) {
                 currentLogTime += ImGui::GetIO().DeltaTime * playbackSpeed;
                 if (currentLogTime > maxTime) {
                     if (selectedTrace != "All") {
-                        currentLogTime = minTime; // Loop if single trace selected
+                        currentLogTime = minTime;
                     } else {
                         currentLogTime = maxTime;
                         isPlaying = false;
@@ -288,8 +286,8 @@ namespace NodeSystem::Visual {
                 if (ImGui::Selectable(t.c_str(), selectedTrace == t)) {
                     if (selectedTrace != t) {
                         selectedTrace = t;
-                        currentLogTime = getTraceMinTime(); // Телепорт на початок трейсу
-                        isPlaying = true; // Можемо відразу вмикати авто-відтворення!
+                        currentLogTime = getTraceMinTime();
+                        isPlaying = true;
                         syncFlightsToTime();
                     }
                 }
@@ -336,12 +334,12 @@ namespace NodeSystem::Visual {
                 if (selBlock->blockType == SelectionType::Node) {
                     auto* vNode = static_cast<VisualNode*>(selBlock);
                     if (currentSelection.slotIndex >= 0 && currentSelection.slotIndex < vNode->coreNode->inputs.size()) {
-                        const auto& kgIn = vNode->coreNode->inputs[currentSelection.slotIndex].input;
+                        const auto& kgIn = vNode->coreNode->inputs[currentSelection.slotIndex].kgt;
                         ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.4f, 1.0f), "Input Slot %d", currentSelection.slotIndex);
                         ImGui::Separator();
                         ImGui::Text("Structure Data (KgInput):");
-                        ImGui::BulletText("c_i: %s", kgIn.c_i.get() ? "true" : "false");
-                        ImGui::BulletText("a_i: %.3f", kgIn.a_i.get());
+                        ImGui::BulletText("c_i: %s", kgIn.c.get() ? "true" : "false");
+                        ImGui::BulletText("a_i: %.3f", kgIn.a.get());
 
                         if (vNode->lastReceivedData.contains(currentSelection.slotIndex)) {
                             ImGui::Separator();
@@ -370,7 +368,7 @@ namespace NodeSystem::Visual {
                 auto *vNode = static_cast<VisualNode *>(selBlock);
                 ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.0f, 1.0f), "Node Selected");
                 ImGui::Separator();
-                ImGui::Text("Node ID: N%d.%d", vNode->coreNode->id.level, vNode->coreNode->id.index);
+                ImGui::Text("Node ID: N%d.%d", vNode->coreNode->nodeId.level, vNode->coreNode->nodeId.index);
                 ImGui::Text("Algorithm ID: %d", vNode->coreNode->algoType);
                 ImGui::Text("Inputs Count: %zu", vNode->coreNode->inputs.size());
             } else if (currentSelection.type == SelectionType::OutputSlot) {
@@ -382,7 +380,7 @@ namespace NodeSystem::Visual {
                     ImGui::Text("Sensor Output Value: %.3f", vSensor->toEmit);
                 } else if (selBlock->blockType == SelectionType::Node) {
                     auto *vNode = static_cast<VisualNode *>(selBlock);
-                    const auto &kgOut = vNode->coreNode->output.output;
+                    const auto &kgOut = vNode->coreNode->output;
 
                     ImGui::Text("Data (KgOutput):");
                     ImGui::BulletText("c: %s", kgOut.c.get() ? "true" : "false");

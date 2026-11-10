@@ -13,11 +13,17 @@ namespace NodeSystem::ZMCore {
         }
 
         void run(bool toRun) {
+            requestedRun = toRun;
             if (toRun) {
-                this->startAll();
+                if (runtimeReady) this->startAll();
             } else {
-                this->shutdown();
+                for (auto &worker : workers) worker.shutdown();
             }
+        }
+
+        void activate() {
+            runtimeReady = true;
+            if (requestedRun) startAll();
         }
 
         void initWorkers(const Core::types::WorkerInt workersCount) {
@@ -26,6 +32,7 @@ namespace NodeSystem::ZMCore {
             for (auto i = 0; i < workersCount; i++) {
                 this->workers.emplace_back(i, this->context, this->nodeStore);
             }
+            if (runtimeReady && requestedRun) startAll();
         }
 
         void addActive(const Core::types::WorkerInt id) {
@@ -54,6 +61,8 @@ namespace NodeSystem::ZMCore {
 
 
     private:
+        bool runtimeReady = false;
+        bool requestedRun = false;
         std::vector<WorkerThread> workers;
         zmq::context_t &context;
     public:

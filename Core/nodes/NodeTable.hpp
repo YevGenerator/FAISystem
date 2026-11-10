@@ -1,6 +1,7 @@
 #pragma once
 
 #include <shared_mutex>
+#include <mutex>
 #include <unordered_map>
 
 #include "Node.hpp"
@@ -13,6 +14,7 @@ namespace NodeSystem::Core::Nodes {
         NodeTable() = default;
 
         auto getNode(const NodeId id) -> Node * {
+            std::shared_lock lock(nodes_mutex);
             const auto it = this->nodes.find(id);
             if (it != nodes.end()) {
                 return &it->second;
@@ -22,6 +24,7 @@ namespace NodeSystem::Core::Nodes {
 
 
         void createAndAddNode(const NodeCreateInfo &nodeInfo) {
+            std::unique_lock lock(nodes_mutex);
             nodes.emplace(nodeInfo.id, nodeInfo);
         }
 

@@ -10,9 +10,9 @@ namespace NodeSystem::Visual {
         Worker,
         TcpRx,
         TcpTx,
-        Queue_Router,   // Додано: Черга на вхід до роутера
-        Queue_Worker,   // Додано: Черга до пулу воркерів
-        Queue_Forward   // Додано: Черга на відправку в мережу
+        Queue_Router,
+        Queue_Worker,
+        Queue_Forward
     };
 
     using ArchPinKey = std::tuple<int, ArchCompType, int>;
