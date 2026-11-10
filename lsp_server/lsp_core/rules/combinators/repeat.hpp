@@ -85,7 +85,6 @@ namespace NodeSystem::lsp::rules::combinators
             }
             else
             {
-                // Варіант 2: Повторення з роздільником
                 if (skip_trivia_)
                 {
                     Trivia::skip_all(cursor);

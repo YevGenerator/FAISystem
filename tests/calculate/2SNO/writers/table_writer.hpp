@@ -12,7 +12,6 @@ namespace NodeSystem::Testing::Calculate::twoSNO {
         virtual void flush() = 0;
     };
 
-    // Зручний композит, щоб писати в 3 формати одночасно
     class CompositeTableWriter : public ITableWriter {
         std::vector<std::unique_ptr<ITableWriter>> m_writers;
     public:

@@ -18,7 +18,7 @@ namespace NodeSystem::Compiler
             {
                 std::visit(emitter, *parsedCmd);
             }
-            return true;
+            return parser.good() && out.good();
         }
     };
 }

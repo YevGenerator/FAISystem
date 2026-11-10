@@ -52,7 +52,7 @@ namespace NodeSystem::lsp::protocol
             data_.push_back(delta_char);
             data_.push_back(length);
             data_.push_back(static_cast<std::uint32_t>(type));
-            data_.push_back(0); // modifier bitmask
+            data_.push_back(0);
 
             prev_line_ = pos.line;
             prev_char_ = pos.character;

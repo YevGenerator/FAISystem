@@ -1,5 +1,7 @@
 #pragma once
 #include "ZMQueueBase.hpp"
+#include "queue/concepts/is_queue_pull.hpp"
+#include "queue/concepts/is_queue_push.hpp"
 #include "policies/policy_list.hpp"
 
 namespace NodeSystem::ZMCore::Queues {
@@ -31,8 +33,8 @@ namespace NodeSystem::ZMCore::Queues {
     using ZMBusServerTcp = ZMQueueBase<Policies::ServerTcpConnectPolicy, Policies::ServerTcpProtocolPolicy>;
     using ZMBusClientTcp = ZMQueueBase<Policies::ClientTcpConnectPolicy, Policies::ClientTcpProtocolPolicy>;
 
-    using ZMBusServerForward = ZMQueueBase<Policies::ForwardPullConnectPolicy, Policies::ServerTcpProtocolPolicy>;
-    using ZMBusClientForward = ZMQueueBase<Policies::ForwardPullConnectPolicy, Policies::ClientTcpProtocolPolicy>;
+    using ZMBusServerForward = ZMQueueBase<Policies::ForwardPullConnectPolicy, Policies::PullerBase<Core::Commands::NodeTransportPacket>>;
+    using ZMBusClientForward = ZMBusServerForward;
 
     using ZMBusServerForwardPush = ZMQueueBase<Policies::ForwardPushConnectPolicy, Policies::ServerTcpProtocolPolicy>;
     using ZMBusClientForwardPush = ZMQueueBase<Policies::ForwardPushConnectPolicy, Policies::ClientTcpProtocolPolicy>;

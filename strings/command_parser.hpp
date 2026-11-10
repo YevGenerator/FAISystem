@@ -73,12 +73,14 @@ namespace NodeSystem::strings
         }
 
         template <typename TargetConv>
-        static void parseAndSetConstant(std::string_view& stream, ParserContext& ctx, std::string_view nameToken)
+        static bool parseAndSetConstant(std::string_view& stream, ParserContext& ctx, std::string_view nameToken)
         {
             if (auto val = convert::TypeParser::parseToken<TargetConv>(stream, ctx))
             {
                 ctx.setConstant(nameToken, std::move(*val));
+                return true;
             }
+            return false;
         }
 
         template <typename TRule>
@@ -88,11 +90,8 @@ namespace NodeSystem::strings
             if (baseType != TRule::key) return false;
 
             if (isList)
-                parseAndSetConstant<convert::ListConverter<typename TRule::converter_t>>(stream, ctx, nameToken);
-            else
-                parseAndSetConstant<typename TRule::converter_t>(stream, ctx, nameToken);
-
-            return true;
+                return parseAndSetConstant<convert::ListConverter<typename TRule::converter_t>>(stream, ctx, nameToken);
+            return parseAndSetConstant<typename TRule::converter_t>(stream, ctx, nameToken);
         }
 
         template <typename... TRules>

@@ -96,7 +96,6 @@ namespace NodeSystem::lsp::fai
                 if (res.is_success())
                 {
                     const auto& node = res.node();
-                    // Підсвічуємо 'let'
                     builder.add_token(node.range.start, 3, protocol::SemanticTokenType::Keyword);
 
                     if (const auto* type_node = node.find_child("type"))
@@ -166,7 +165,7 @@ namespace NodeSystem::lsp::fai
                     .detail = "Оголошення змінної",
                     .documentation = "Синтаксис: let <type> <name> = <value>",
                     .insert_text = "let ",
-                    .command = retrigger_cmd // Одразу відкриє список типів
+                    .command = retrigger_cmd
                 });
             }
             else if (line_prefix.starts_with("let "))

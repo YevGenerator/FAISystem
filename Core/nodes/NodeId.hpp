@@ -5,8 +5,8 @@
 
 namespace NodeSystem::Core::Nodes {
     struct NodeId {
-        types::ID level;
-        types::ID index;
+        types::ID level{};
+        types::ID index{};
 
         constexpr auto operator==(const NodeId &other) const -> bool {
             return other.level == this->level && other.index == this->index;

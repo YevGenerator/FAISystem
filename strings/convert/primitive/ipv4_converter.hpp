@@ -20,7 +20,7 @@ namespace NodeSystem::strings::convert
                 size_t end = (i == 3) ? ipStr.size() : ipStr.find('.', start);
                 if (start >= ipStr.size() || (i < 3 && end == std::string_view::npos))
                 {
-                    return std::nullopt; // Порушено формат
+                    return std::nullopt;
                 }
 
                 const auto octetStr = ipStr.substr(start, end - start);

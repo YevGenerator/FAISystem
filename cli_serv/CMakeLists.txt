@@ -16,5 +16,7 @@ add_custom_command(TARGET servantZMQ POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:servantZMQ> ${CMAKE_BINARY_DIR}/build2/
 )
 
-target_link_options(servantZMQ PRIVATE -static)
-target_link_options(serverZMQ PRIVATE -static)
+if(MINGW)
+    target_link_options(servantZMQ PRIVATE -static)
+    target_link_options(serverZMQ PRIVATE -static)
+endif()

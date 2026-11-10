@@ -59,7 +59,9 @@ add_executable(lsp
 )
 
 target_link_libraries(lsp PRIVATE nlohmann_json::nlohmann_json)
-target_link_options(lsp PRIVATE -static -static-libgcc -static-libstdc++)
+if(MINGW)
+    target_link_options(lsp PRIVATE -static -static-libgcc -static-libstdc++)
+endif()
 
 target_link_libraries(lsp PRIVATE RP_Core_Strings
 )

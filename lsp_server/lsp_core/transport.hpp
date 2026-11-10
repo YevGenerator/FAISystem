@@ -81,7 +81,7 @@ namespace NodeSystem::lsp
 
             if (static_cast<std::size_t>(in.gcount()) != content_length)
             {
-                return std::nullopt; // Потік обірвався до того, як прочитали всі байти
+                return std::nullopt;
             }
 
             return body;

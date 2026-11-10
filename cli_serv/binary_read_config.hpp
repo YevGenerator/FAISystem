@@ -40,6 +40,10 @@ namespace NodeSystem::Serv
 
             while (auto cmdOpt = Core::Commands::CommandList::nextFromFile(ptr, available))
             {
+                if (std::holds_alternative<std::monostate>(*cmdOpt)) {
+                    std::cerr << "[ConfigReader] Invalid or truncated binary command in " << path << "\n";
+                    return false;
+                }
                 std::visit([&processor]<typename TCommand>(const TCommand& concreteCmd)
                 {
                     if constexpr (!std::is_same_v<std::decay_t<TCommand>, std::monostate>)

@@ -44,19 +44,17 @@ namespace NodeSystem::lsp::fai::syntax::structs
                             .text = cursor.slice_since(start_cp),
                             .range = cursor.range_since(start_cp),
                             .children = {
-                                std::move(ident_res.value()), // child[0]: ім'я поля
-                                std::move(val_res.value())    // child[1]: значення поля
+                                std::move(ident_res.value()),
+                                std::move(val_res.value())
                             }
                         };
                         return rules::RuleResult::success(std::move(field_node));
                     }
                 }
 
-                // Якщо після ідентифікатора не йшов знак '=', відкочуємося
                 cursor.restore(after_ident_cp);
             }
 
-            // 2. Якщо це не "name = value", відкочуємося на початок і пробуємо позиційне значення
             cursor.restore(start_cp);
             RawValueToken value_scanner;
             auto val_res = value_scanner(cursor);
@@ -68,7 +66,7 @@ namespace NodeSystem::lsp::fai::syntax::structs
                     .text = cursor.slice_since(start_cp),
                     .range = cursor.range_since(start_cp),
                     .children = {
-                        std::move(val_res.value()) // child[0]: значення поля
+                        std::move(val_res.value())
                     }
                 };
                 return rules::RuleResult::success(std::move(pos_node));

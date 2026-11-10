@@ -34,7 +34,7 @@ namespace NodeSystem::lsp::rules::combinators
             if (!open_res.is_success())
             {
                 cursor.restore(start_cp);
-                return open_res; // mismatch або failure
+                return open_res;
             }
 
             Trivia::skip_all(cursor);

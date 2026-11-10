@@ -5,7 +5,7 @@ namespace NodeSystem::Core::Events {
 #pragma pack(push, 1)
     struct EventId {
         types::ID deviceId{};
-        types::EventIDInt localEventId{1};
+        types::EventIDInt localEventId{};
 
         static constexpr auto null() -> EventId {
             return {.deviceId = 0, .localEventId = 0};

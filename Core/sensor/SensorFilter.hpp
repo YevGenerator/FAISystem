@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include "types/basic.hpp"
 #include <cmath>
 
 namespace NodeSystem::Core::Sensors {

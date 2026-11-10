@@ -154,8 +154,7 @@ namespace NodeSystem::Visual {
                     }
                 }
 
-                // Розрахунок затухань:
-                if (f.fromPin != f.toPin) { // Тільки для реальних перельотів
+                if (f.fromPin != f.toPin) {
                     if (currentLogTime >= f.emitTime && currentLogTime - f.emitTime <= flashDuration) {
                         float intensity = 1.0f - ((currentLogTime - f.emitTime) / flashDuration);
                         emitFlashes[f.fromPin] = std::max(emitFlashes[f.fromPin], intensity);
@@ -167,12 +166,10 @@ namespace NodeSystem::Visual {
                 }
             }
 
-            // Малюємо пристрої, ПЕРЕДАЄМО ФЛЕШІ
             for (auto& [id, dev] : devices) {
                 dev.draw(drawList, origin, zoom, pinRegistry, activeQueues, busyWorkers, emitFlashes, recvFlashes);
             }
 
-            // Малюємо зовнішні мережеві труби та АНІМУЄМО ПОЛЬОТИ
             for (const auto& f : flights) {
                 if (std::get<1>(f.fromPin) == ArchCompType::TcpTx && std::get<1>(f.toPin) == ArchCompType::TcpRx) {
                     if (pinRegistry.contains(f.fromPin) && pinRegistry.contains(f.toPin)) {
